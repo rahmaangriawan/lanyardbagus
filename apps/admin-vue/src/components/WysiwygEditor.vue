@@ -28,7 +28,7 @@ onMounted(() => {
   if (editorRef.value && props.modelValue) {
     editorRef.value.innerHTML = props.modelValue
   }
-  // Enforce <p> tags for new lines instead of <div> or <br>
+  // Enforce <p> tags for new lines
   document.execCommand('defaultParagraphSeparator', false, 'p')
 })
 
@@ -52,13 +52,11 @@ const sourceCode = ref(props.modelValue)
 
 function toggleSourceMode() {
   if (isSourceMode.value) {
-    // Switching back to visual mode
     if (editorRef.value) {
       editorRef.value.innerHTML = sourceCode.value
     }
     isSourceMode.value = false
   } else {
-    // Switching to source mode
     sourceCode.value = editorRef.value?.innerHTML || ''
     isSourceMode.value = true
   }
@@ -156,13 +154,13 @@ const tools = [
       v-show="!isSourceMode"
       ref="editorRef"
       contenteditable="true"
-      class="min-h-[300px] max-h-[600px] overflow-y-auto p-4 outline-none editor-content editor-scroll"
+      class="min-h-[300px] max-h-[600px] overflow-y-auto p-6 outline-none editor-content editor-scroll"
       @input="updateContent"
     ></div>
     <textarea
       v-if="isSourceMode"
       v-model="sourceCode"
-      class="w-full min-h-[300px] max-h-[600px] p-4 font-mono text-sm bg-muted/50 border-none outline-none resize-none editor-scroll"
+      class="w-full min-h-[300px] p-4 font-mono text-sm bg-zinc-950 text-zinc-100 outline-none"
       @input="onSourceCodeInput"
     ></textarea>
 
@@ -194,38 +192,33 @@ const tools = [
 
 .editor-content {
   color: hsl(var(--foreground));
+  font-family: inherit;
 }
 .editor-content p, .editor-content div {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 1.5rem;
   line-height: 1.6;
 }
-.editor-content h1 {
-  font-size: 2.25rem !important;
-  font-weight: 800;
-  margin-top: 2.5rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.2;
+/* Last paragraph shouldn't have margin in a contenteditable sometimes */
+.editor-content p:last-child, .editor-content div:last-child {
+  margin-bottom: 0;
 }
-.editor-content h2 {
-  font-size: 1.75rem !important;
+.editor-content h1 {
+  font-size: 2rem;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  line-height: 1.2;
 }
-.editor-content h3 {
-  font-size: 1.35rem !important;
+.editor-content h2 {
+  font-size: 1.5rem;
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  line-height: 1.2;
 }
-.editor-content h4 {
-  font-size: 1.15rem !important;
+.editor-content h3 {
+  font-size: 1.25rem;
   font-weight: 700;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  line-height: 1.2;
 }
 .editor-content ul {
   list-style-type: disc;
@@ -252,6 +245,6 @@ const tools = [
   max-width: 100%;
   height: auto;
   border-radius: 0.5rem;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 }
 </style>

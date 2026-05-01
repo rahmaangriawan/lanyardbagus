@@ -22,7 +22,7 @@
 
     <style>
         html { scroll-behavior: smooth; }
-        body { -webkit-font-smoothing: antialiased; }
+        body { overflow-x: clip; }
         .display-mega { font-size: 80px; font-weight: 400; line-height: 1.0; letter-spacing: -2px; }
         .display-xl  { font-size: 64px; font-weight: 400; line-height: 1.0; letter-spacing: -1.6px; }
         .display-lg  { font-size: 52px; font-weight: 400; line-height: 1.0; letter-spacing: -1.3px; }
