@@ -193,17 +193,16 @@ const tools = [
 .editor-content {
   color: hsl(var(--foreground));
   font-family: inherit;
-}
-.editor-content p, .editor-content div {
-  margin-bottom: 1.5rem;
   line-height: 1.6;
 }
-/* Last paragraph shouldn't have margin in a contenteditable sometimes */
+.editor-content p, .editor-content div {
+  margin-bottom: 1.25rem;
+}
 .editor-content p:last-child, .editor-content div:last-child {
   margin-bottom: 0;
 }
 .editor-content h1 {
-  font-size: 2rem;
+  font-size: 1.875rem;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1rem;
@@ -211,30 +210,30 @@ const tools = [
 .editor-content h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.875rem;
 }
 .editor-content h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 .editor-content ul {
   list-style-type: disc;
-  padding-left: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding-left: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 .editor-content ol {
   list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding-left: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 .editor-content blockquote {
-  border-left: 4px solid hsl(var(--border));
+  border-left: 3px solid hsl(var(--border));
   padding-left: 1rem;
   font-style: italic;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   color: hsl(var(--muted-foreground));
 }
 .editor-content a {
@@ -245,6 +244,6 @@ const tools = [
   max-width: 100%;
   height: auto;
   border-radius: 0.5rem;
-  margin: 1rem 0;
+  margin: 1.25rem 0;
 }
 </style>
