@@ -20,6 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://lanyardbagus.com',
         'http://localhost:4321',
         'http://127.0.0.1:4321',
         'http://localhost:5173',

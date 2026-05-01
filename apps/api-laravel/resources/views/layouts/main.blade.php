@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Force HTTPS for all assets (Fixes Mixed Content) -->
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <!-- CSP: Force HTTPS + Allow required external resources -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;">
     
     <title>@yield('title', $settings->site_title ?? 'Lanyardbagus')</title>
     <meta name="description" content="@yield('meta_description', $settings->homepage_meta_description ?? '')">
@@ -195,8 +195,16 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@0.454.1/dist/umd/lucide.min.js"></script>
     <script>
-        // Initialize Lucide with specific icons if needed, or just all
-        lucide.createIcons();
+        // Initialize Lucide with fallback
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        } else {
+            console.warn('Lucide failed to load from CDN');
+            // Fallback: hide icon placeholders to prevent broken UI
+            document.querySelectorAll('[data-lucide]').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
 
         // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
