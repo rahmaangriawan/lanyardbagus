@@ -41,9 +41,9 @@ const quickActions = [
 onMounted(async () => {
   try {
     const [postsRes, pagesRes, mediaRes] = await Promise.all([
-      axios.get(`${API_URL}/api/posts`).catch(() => ({ data: [] })),
-      axios.get(`${API_URL}/api/pages`).catch(() => ({ data: [] })),
-      axios.get(`${API_URL}/api/media`).catch(() => ({ data: [] })),
+      axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true }).catch(() => ({ data: [] })),
+      axios.get(`${API_URL}/api/pages`, { withCredentials: true }).catch(() => ({ data: [] })),
+      axios.get(`${API_URL}/api/media`, { withCredentials: true }).catch(() => ({ data: [] })),
     ])
     
     stats.value.posts = postsRes.data.length || 0
@@ -67,7 +67,7 @@ function formatDate(date) {
 }
 
 function getStatusBadgeClass(status) {
-  return status === 'published' 
+  return status?.toUpperCase() === 'PUBLISHED'
     ? 'bg-foreground text-background' 
     : 'bg-muted text-muted-foreground'
 }

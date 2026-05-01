@@ -15,7 +15,8 @@ const filterStatus = ref('all') // all, published, draft, newest, oldest
 
 onMounted(async () => {
   try {
-    const res = await axios.get(`${API_URL}/api/posts`)
+    // Pakai endpoint admin agar bisa melihat semua post (termasuk DRAFT)
+    const res = await axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true })
     posts.value = res.data || []
   } catch (err) {
     console.error('Failed to load posts:', err)
@@ -36,11 +37,11 @@ const filteredPosts = computed(() => {
     )
   }
   
-  // Filter by status
+  // Filter by status (case-insensitive karena DB simpan uppercase: PUBLISHED, DRAFT)
   if (filterStatus.value === 'published') {
-    result = result.filter(p => p.status === 'published')
+    result = result.filter(p => p.status?.toUpperCase() === 'PUBLISHED')
   } else if (filterStatus.value === 'draft') {
-    result = result.filter(p => p.status === 'draft')
+    result = result.filter(p => p.status?.toUpperCase() === 'DRAFT')
   }
   
   // Sort
@@ -81,7 +82,7 @@ const currentFilterLabel = computed(() => {
 })
 
 function getStatusBadgeClass(status) {
-  return status === 'published' 
+  return status?.toUpperCase() === 'PUBLISHED'
     ? 'bg-foreground text-background' 
     : 'bg-muted text-muted-foreground'
 }
@@ -99,7 +100,8 @@ async function deletePost(id, event) {
   event.stopPropagation()
   if (!confirm('Hapus post ini?')) return
   try {
-    await axios.delete(`${API_URL}/api/posts/${id}`, { withCredentials: true })
+    // Pakai endpoint admin untuk delete
+    await axios.delete(`${API_URL}/api/admin/posts/${id}`, { withCredentials: true })
     posts.value = posts.value.filter(p => p.id !== id)
   } catch (err) {
     alert('Gagal menghapus: ' + err.message)
