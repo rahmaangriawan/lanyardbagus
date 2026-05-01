@@ -1119,5 +1119,13 @@
             link.addEventListener('click', closeMenu);
         });
     </script>
+
+    <!-- Lucide Icons -->
+    <script src="/js/lucide.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
 </body>
 </html>

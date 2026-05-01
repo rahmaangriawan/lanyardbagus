@@ -38,6 +38,61 @@ Route::get('/migrate-db-production', function () {
     return $output . '<br><strong>Done! Silakan cek kembali fitur yang sebelumnya error.</strong>';
 });
 
+// TEMPORARY: Create storage symlink (run once on production)
+Route::get('/storage-link-production', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return 'Storage link created: ' . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) {
+        return 'Storage link: ' . $e->getMessage();
+    }
+});
+
+// TEMPORARY: Sync media files from storage into DB (untuk recover media lama)
+Route::get('/sync-media-production', function () {
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    $files = $disk->files('media');
+    $count = 0;
+    $skipped = 0;
+    $output = '<h3>Media Sync Results:</h3><br>';
+
+    foreach ($files as $path) {
+        $filename = basename($path);
+        // Skip if already in DB
+        if (\App\Models\Media::where('file_name', $filename)->exists()) {
+            $skipped++;
+            continue;
+        }
+        $url = asset('storage/' . $path);
+        $mime = 'image/webp';
+        if (str_ends_with($filename, '.jpg') || str_ends_with($filename, '.jpeg')) $mime = 'image/jpeg';
+        elseif (str_ends_with($filename, '.png')) $mime = 'image/png';
+        elseif (str_ends_with($filename, '.gif')) $mime = 'image/gif';
+        elseif (str_ends_with($filename, '.pdf')) $mime = 'application/pdf';
+        $size = $disk->size($path);
+        $baseName = pathinfo($filename, PATHINFO_FILENAME);
+        $altText = ucwords(str_replace(['-', '_'], ' ', $baseName));
+        try {
+            $fullPath = storage_path('app/public/' . $path);
+            [$w, $h] = str_starts_with($mime, 'image/') && function_exists('getimagesize')
+                ? (@getimagesize($fullPath) ?: [null, null])
+                : [null, null];
+        } catch (\Exception $e) { $w = null; $h = null; }
+        \App\Models\Media::create([
+            'file_name' => $filename,
+            'url'       => $url,
+            'mime_type' => $mime,
+            'width'     => $w,
+            'height'    => $h,
+            'size'      => $size,
+            'alt_text'  => $altText,
+        ]);
+        $output .= "<span style='color:green'>Imported: $filename</span><br>";
+        $count++;
+    }
+    return $output . "<br><strong>Done! Imported: $count baru, Skipped: $skipped sudah ada.</strong>";
+});
+
 // ============================================================
 // BLOG ARCHIVE ROUTES — must come BEFORE /blog/{slug}
 // ============================================================
