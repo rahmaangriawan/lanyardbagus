@@ -3,6 +3,10 @@
 @section('title', 'Peta Situs - ' . ($settings->site_title ?? 'Lanyardbagus'))
 @section('meta_description', 'Peta situs lengkap Lanyardbagus. Temukan semua halaman, artikel, dan kategori dalam satu tempat.')
 
+@push('head')
+<meta name="robots" content="noindex, follow">
+@endpush
+
 @section('content')
     @php
         $totalUrls = count($statics) + count($posts) + count($categories) + 1;
