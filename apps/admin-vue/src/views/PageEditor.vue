@@ -100,7 +100,7 @@ onMounted(async () => {
 async function loadPage() {
   loading.value = true
   try {
-    const res = await axios.get(`${API_URL}/api/pages/${pageId.value}`)
+    const res = await axios.get(`${API_URL}/api/admin/pages/${pageId.value}`, { withCredentials: true })
     page.value = res.data
   } catch (err) {
     console.error('Failed to load page:', err)
