@@ -33,7 +33,11 @@ onMounted(() => {
 })
 
 function execCmd(command, value = null) {
-  document.execCommand(command, false, value)
+  if (command === 'formatBlock' && value === 'p') {
+    document.execCommand('formatBlock', false, '<p>')
+  } else {
+    document.execCommand(command, false, value)
+  }
   updateContent()
 }
 
@@ -152,7 +156,7 @@ const tools = [
       v-show="!isSourceMode"
       ref="editorRef"
       contenteditable="true"
-      class="min-h-[300px] max-h-[600px] overflow-y-auto p-4 outline-none prose prose-sm max-w-none editor-scroll"
+      class="min-h-[300px] max-h-[600px] overflow-y-auto p-4 outline-none editor-content editor-scroll"
       @input="updateContent"
     ></div>
     <textarea
@@ -188,40 +192,68 @@ const tools = [
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
-:deep(.prose) {
-  @apply text-foreground;
+.editor-content {
+  color: hsl(var(--foreground));
 }
-:deep(.prose p) {
-  @apply mb-4 leading-relaxed;
+.editor-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
 }
-:deep(.prose h1) {
-  @apply text-3xl font-bold mt-8 mb-4;
+.editor-content h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
 }
-:deep(.prose h2) {
-  @apply text-2xl font-bold mt-6 mb-3;
+.editor-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
 }
-:deep(.prose h3) {
-  @apply text-xl font-bold mt-4 mb-2;
+.editor-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
-:deep(.prose ul) {
-  @apply list-disc list-inside my-2;
+.editor-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
 }
-:deep(.prose ol) {
-  @apply list-decimal list-inside my-2;
+.editor-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
 }
-:deep(.prose blockquote) {
-  @apply border-l-4 border-border pl-4 italic my-2;
+.editor-content blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+  color: hsl(var(--muted-foreground));
 }
-:deep(.prose a) {
-  @apply text-primary underline;
+.editor-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
 }
-:deep(.prose img) {
-  @apply max-w-full h-auto rounded-lg my-2;
+.editor-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
 }
-:deep(.prose table) {
-  @apply w-full border-collapse border border-border my-4;
+.editor-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
 }
-:deep(.prose td), :deep(.prose th) {
-  @apply border border-border p-2;
+.editor-content td, .editor-content th {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem;
 }
 </style>
