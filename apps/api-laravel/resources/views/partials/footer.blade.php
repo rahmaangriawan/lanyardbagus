@@ -37,13 +37,6 @@
                     Solusi identitas perusahaan terbaik di Indonesia. Kami menyediakan lanyard premium, kartu identitas,
                     dan perlengkapan branding berkualitas tinggi.
                 </p>
-                <div class="flex items-center gap-4 pt-2">
-                    @foreach($socialLinks as $slink)
-                        <a href="{{ data_get($slink, 'href', '#') }}" class="text-cb-muted hover:text-cb-blue transition-colors">
-                            <i data-lucide="{{ data_get($slink, 'icon', 'link') }}" class="w-5 h-5"></i>
-                        </a>
-                    @endforeach
-                </div>
             </div>
 
             <!-- Navigation -->
