@@ -1071,9 +1071,11 @@
 
     @include('partials.footer')
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/js/lucide.min.js"></script>
     <script>
-        lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
 
         // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');

@@ -148,18 +148,7 @@
 
     @include('partials.footer')
 
-    <!-- Lucide Icons (Self-hosted) -->
-    <script src="/js/lucide.min.js"></script>
     <script>
-        // Initialize Lucide icons
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            } else {
-                console.error('Lucide failed to load');
-            }
-        });
-
         // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const hamburgerIcon = document.getElementById('menu-icon-hamburger');
@@ -204,5 +193,17 @@
         });
     </script>
     @stack('scripts')
+
+    <!-- Lucide Icons (Self-hosted) — loaded LAST so all DOM icons are available -->
+    <script src="/js/lucide.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+        // Fallback if DOM already loaded
+        if (document.readyState !== 'loading') {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
