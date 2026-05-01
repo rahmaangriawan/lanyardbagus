@@ -14,12 +14,28 @@ Route::get('/', function () {
 
 // TEMPORARY: Route to run migrations on shared hosting without SSH
 Route::get('/migrate-db-production', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        return 'Migration successful: ' . \Illuminate\Support\Facades\Artisan::output();
-    } catch (\Exception $e) {
-        return 'Migration failed: ' . $e->getMessage();
+    $output = '<h3>Migration Results:</h3><br>';
+    $files = \Illuminate\Support\Facades\File::files(database_path('migrations'));
+    
+    // Sort files by name so they run in the correct order
+    $filenames = array_map(function($file) { return $file->getFilename(); }, $files);
+    sort($filenames);
+    
+    foreach ($filenames as $filename) {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', [
+                '--path' => 'database/migrations/' . $filename,
+                '--force' => true
+            ]);
+            $res = \Illuminate\Support\Facades\Artisan::output();
+            if (trim($res) !== 'Nothing to migrate.') {
+                $output .= "<span style='color:green'>Migrated: $filename</span><br>";
+            }
+        } catch (\Exception $e) {
+            $output .= "<span style='color:orange'>Skipped (Already exists/Failed): $filename</span><br>";
+        }
     }
+    return $output . '<br><strong>Done! Silakan cek kembali fitur yang sebelumnya error.</strong>';
 });
 
 // ============================================================
