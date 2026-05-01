@@ -4,9 +4,9 @@ import { Button } from './ui'
 import MediaPickerModal from './MediaPickerModal.vue'
 import { 
   Bold, Italic, Underline, Strikethrough, 
-  Heading1, Heading2, Heading3,
+  Heading2, Heading3, Heading4, Heading5,
   List, ListOrdered, Quote, Link, Image, Code, Undo, Redo,
-  Table, Table2, Pilcrow
+  Table, Table2, Pilcrow, RemoveFormatting
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -28,9 +28,17 @@ onMounted(() => {
   if (editorRef.value && props.modelValue) {
     editorRef.value.innerHTML = props.modelValue
   }
+  // Use tags instead of inline styles
+  document.execCommand('styleWithCSS', false, false)
   // Enforce <p> tags for new lines
   document.execCommand('defaultParagraphSeparator', false, 'p')
 })
+
+function handlePaste(e) {
+  e.preventDefault()
+  const text = e.clipboardData.getData('text/plain')
+  document.execCommand('insertText', false, text)
+}
 
 function execCmd(command, value = null) {
   if (command === 'formatBlock' && value === 'p') {
@@ -112,14 +120,16 @@ const tools = [
   { icon: Underline, action: () => execCmd('underline'), title: 'Underline' },
   { icon: Strikethrough, action: () => execCmd('strikeThrough'), title: 'Strikethrough' },
   { type: 'divider' },
-  { icon: Heading1, action: () => execCmd('formatBlock', 'h1'), title: 'Heading 1' },
   { icon: Heading2, action: () => execCmd('formatBlock', 'h2'), title: 'Heading 2' },
   { icon: Heading3, action: () => execCmd('formatBlock', 'h3'), title: 'Heading 3' },
+  { icon: Heading4, action: () => execCmd('formatBlock', 'h4'), title: 'Heading 4' },
+  { icon: Heading5, action: () => execCmd('formatBlock', 'h5'), title: 'Heading 5' },
   { icon: Pilcrow, action: () => execCmd('formatBlock', 'p'), title: 'Paragraph' },
   { type: 'divider' },
   { icon: List, action: () => execCmd('insertUnorderedList'), title: 'Bullet List' },
   { icon: ListOrdered, action: () => execCmd('insertOrderedList'), title: 'Numbered List' },
   { icon: Quote, action: () => execCmd('formatBlock', 'blockquote'), title: 'Quote' },
+  { icon: RemoveFormatting, action: () => execCmd('removeFormat'), title: 'Clear Formatting' },
   { type: 'divider' },
   { icon: Link, action: insertLink, title: 'Insert Link' },
   { icon: Image, action: insertImage, title: 'Insert Image' },
@@ -156,6 +166,7 @@ const tools = [
       contenteditable="true"
       class="min-h-[300px] max-h-[600px] overflow-y-auto p-6 outline-none editor-content editor-scroll"
       @input="updateContent"
+      @paste="handlePaste"
     ></div>
     <textarea
       v-if="isSourceMode"
@@ -198,13 +209,6 @@ const tools = [
 :deep(.editor-content p), :deep(.editor-content div) {
   margin-bottom: 1.5rem;
 }
-:deep(.editor-content h1) {
-  font-size: 2.25rem;
-  font-weight: 800;
-  margin-top: 2.5rem;
-  margin-bottom: 1.25rem;
-  display: block;
-}
 :deep(.editor-content h2) {
   font-size: 1.875rem;
   font-weight: 700;
@@ -217,6 +221,20 @@ const tools = [
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
+  display: block;
+}
+:deep(.editor-content h4) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+:deep(.editor-content h5) {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
   display: block;
 }
 :deep(.editor-content ul) {
