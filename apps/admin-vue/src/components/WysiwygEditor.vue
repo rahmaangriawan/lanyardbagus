@@ -190,60 +190,60 @@ const tools = [
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
-.editor-content {
+:deep(.editor-content) {
   color: hsl(var(--foreground));
   font-family: inherit;
   line-height: 1.6;
 }
-.editor-content p, .editor-content div {
+:deep(.editor-content p), :deep(.editor-content div) {
+  margin-bottom: 1.5rem;
+}
+:deep(.editor-content h1) {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-top: 2.5rem;
   margin-bottom: 1.25rem;
+  display: block;
 }
-.editor-content p:last-child, .editor-content div:last-child {
-  margin-bottom: 0;
-}
-.editor-content h1 {
+:deep(.editor-content h2) {
   font-size: 1.875rem;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1rem;
+  display: block;
 }
-.editor-content h2 {
+:deep(.editor-content h3) {
   font-size: 1.5rem;
-  font-weight: 700;
-  margin-top: 1.75rem;
-  margin-bottom: 0.875rem;
-}
-.editor-content h3 {
-  font-size: 1.25rem;
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
+  display: block;
 }
-.editor-content ul {
+:deep(.editor-content ul) {
   list-style-type: disc;
-  padding-left: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
 }
-.editor-content ol {
+:deep(.editor-content ol) {
   list-style-type: decimal;
-  padding-left: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
 }
-.editor-content blockquote {
-  border-left: 3px solid hsl(var(--border));
+:deep(.editor-content blockquote) {
+  border-left: 4px solid hsl(var(--border));
   padding-left: 1rem;
   font-style: italic;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   color: hsl(var(--muted-foreground));
 }
-.editor-content a {
+:deep(.editor-content a) {
   color: hsl(var(--primary));
   text-decoration: underline;
 }
-.editor-content img {
+:deep(.editor-content img) {
   max-width: 100%;
   height: auto;
   border-radius: 0.5rem;
-  margin: 1.25rem 0;
+  margin: 1.5rem 0;
 }
 </style>
