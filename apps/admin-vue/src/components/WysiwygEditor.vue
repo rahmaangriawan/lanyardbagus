@@ -195,26 +195,33 @@ const tools = [
 .editor-content {
   color: hsl(var(--foreground));
 }
-.editor-content p {
-  margin-bottom: 1.25rem;
+.editor-content p, .editor-content div {
+  margin-bottom: 1.5rem !important;
   line-height: 1.6;
 }
 .editor-content h1 {
-  font-size: 1.875rem;
+  font-size: 2.25rem !important;
+  font-weight: 800;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.2;
+}
+.editor-content h2 {
+  font-size: 1.75rem !important;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
-.editor-content h2 {
-  font-size: 1.5rem;
+.editor-content h3 {
+  font-size: 1.35rem !important;
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   line-height: 1.2;
 }
-.editor-content h3 {
-  font-size: 1.25rem;
+.editor-content h4 {
+  font-size: 1.15rem !important;
   font-weight: 700;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
@@ -223,18 +230,18 @@ const tools = [
 .editor-content ul {
   list-style-type: disc;
   padding-left: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 .editor-content ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 .editor-content blockquote {
   border-left: 4px solid hsl(var(--border));
   padding-left: 1rem;
   font-style: italic;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: hsl(var(--muted-foreground));
 }
 .editor-content a {
@@ -245,15 +252,6 @@ const tools = [
   max-width: 100%;
   height: auto;
   border-radius: 0.5rem;
-  margin: 1rem 0;
-}
-.editor-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-}
-.editor-content td, .editor-content th {
-  border: 1px solid hsl(var(--border));
-  padding: 0.5rem;
+  margin: 1.5rem 0;
 }
 </style>
