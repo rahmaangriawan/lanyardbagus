@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- CSP: Allow local and required external resources -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;">
     
     <title>@yield('title', $settings->site_title ?? 'Lanyardbagus')</title>
     <meta name="description" content="@yield('meta_description', $settings->homepage_meta_description ?? '')">
@@ -20,52 +20,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS with Typography -->
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'system-ui', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-                    },
-                    colors: {
-                        cb: {
-                            blue: '#0052ff',
-                            'blue-active': '#003ecc',
-                            'blue-disabled': '#a8b8cc',
-                            'accent-yellow': '#f4b000',
-                            canvas: '#ffffff',
-                            'surface-soft': '#f7f7f7',
-                            'surface-strong': '#eef0f3',
-                            'surface-dark': '#0a0b0d',
-                            'surface-dark-el': '#16181c',
-                            hairline: '#dee1e6',
-                            'hairline-soft': '#eef0f3',
-                            ink: '#0a0b0d',
-                            body: '#5b616e',
-                            muted: '#7c828a',
-                            'muted-soft': '#a8acb3',
-                            'semantic-up': '#05b169',
-                            'semantic-down': '#cf202f',
-                        }
-                    },
-                    borderRadius: {
-                        'cb-xs': '4px',
-                        'cb-sm': '8px',
-                        'cb-md': '12px',
-                        'cb-lg': '16px',
-                        'cb-xl': '24px',
-                        'cb-pill': '100px',
-                    },
-                    spacing: {
-                        'section': '96px',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS with Vite -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         html { scroll-behavior: smooth; }

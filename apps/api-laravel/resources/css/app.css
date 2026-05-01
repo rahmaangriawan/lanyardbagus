@@ -6,6 +6,35 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', '-apple-system', 'system-ui', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif';
+    --font-mono: '"JetBrains Mono"', 'ui-monospace', 'monospace';
+    
+    --color-cb-blue: #0052ff;
+    --color-cb-blue-active: #003ecc;
+    --color-cb-blue-disabled: #a8b8cc;
+    --color-cb-accent-yellow: #f4b000;
+    --color-cb-canvas: #ffffff;
+    --color-cb-surface-soft: #f7f7f7;
+    --color-cb-surface-strong: #eef0f3;
+    --color-cb-surface-dark: #0a0b0d;
+    --color-cb-surface-dark-el: #16181c;
+    --color-cb-hairline: #dee1e6;
+    --color-cb-hairline-soft: #eef0f3;
+    --color-cb-ink: #0a0b0d;
+    --color-cb-body: #5b616e;
+    --color-cb-muted: #7c828a;
+    --color-cb-muted-soft: #a8acb3;
+    --color-cb-semantic-up: #05b169;
+    --color-cb-semantic-down: #cf202f;
+    
+    --radius-cb-xs: 4px;
+    --radius-cb-sm: 8px;
+    --radius-cb-md: 12px;
+    --radius-cb-lg: 16px;
+    --radius-cb-xl: 24px;
+    --radius-cb-pill: 100px;
+    
+    --spacing-section: 96px;
 }
+
+@plugin '@tailwindcss/typography';
