@@ -201,7 +201,11 @@ async function loadPost() {
   loading.value = true
   try {
     const res = await axios.get(`${API_URL}/api/posts/${postId.value}`)
-    post.value = res.data
+    post.value = {
+      ...res.data,
+      // Convert featuredImage to featured_image for frontend
+      featured_image: res.data.featuredImage || null
+    }
     post.value.tags_input = (res.data?.tags || []).map(tag => tag.name).join(', ')
   } catch (err) {
     console.error('Failed to load post:', err)
@@ -263,9 +267,12 @@ async function savePost() {
   try {
     const payload = {
       ...post.value,
-      tag_ids: await resolveTagIdsFromInput()
+      tag_ids: await resolveTagIdsFromInput(),
+      // Convert featured_image object to featured_image_id
+      featured_image_id: post.value.featured_image?.id || null
     }
     delete payload.tags_input
+    delete payload.featured_image
 
     let newPostId = postId.value
     if (isEdit.value) {
