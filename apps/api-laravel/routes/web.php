@@ -160,6 +160,20 @@ Route::get('/author/{slug}', function ($slug) {
 });
 
 // ============================================================
+// SITEMAP XML
+// ============================================================
+Route::get('/sitemap.xml', function () {
+    $posts = Post::published()->get();
+    $categories = \App\Models\Category::all();
+    $statics = [
+        'jenis', 'produk', 'harga', 'faq', 'kontak', 'tentang', 'pengiriman', 'kebijakan', 'blog'
+    ];
+
+    return response()->view('sitemap', compact('posts', 'categories', 'statics'))
+        ->header('Content-Type', 'text/xml');
+});
+
+// ============================================================
 // Single Post — MUST be LAST to avoid swallowing the routes above
 // ============================================================
 Route::get('/blog/{slug}', function ($slug) {
