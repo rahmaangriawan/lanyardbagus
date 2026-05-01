@@ -6,7 +6,7 @@ import {
   Bold, Italic, Underline, Strikethrough, 
   Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Link, Image, Code, Undo, Redo,
-  Table, Table2, Type
+  Table, Table2, Pilcrow
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -28,6 +28,8 @@ onMounted(() => {
   if (editorRef.value && props.modelValue) {
     editorRef.value.innerHTML = props.modelValue
   }
+  // Enforce <p> tags for new lines instead of <div> or <br>
+  document.execCommand('defaultParagraphSeparator', false, 'p')
 })
 
 function execCmd(command, value = null) {
@@ -111,7 +113,7 @@ const tools = [
   { icon: Heading1, action: () => execCmd('formatBlock', 'h1'), title: 'Heading 1' },
   { icon: Heading2, action: () => execCmd('formatBlock', 'h2'), title: 'Heading 2' },
   { icon: Heading3, action: () => execCmd('formatBlock', 'h3'), title: 'Heading 3' },
-  { icon: Type, action: () => execCmd('formatBlock', 'p'), title: 'Paragraph' },
+  { icon: Pilcrow, action: () => execCmd('formatBlock', 'p'), title: 'Paragraph' },
   { type: 'divider' },
   { icon: List, action: () => execCmd('insertUnorderedList'), title: 'Bullet List' },
   { icon: ListOrdered, action: () => execCmd('insertOrderedList'), title: 'Numbered List' },
@@ -190,16 +192,16 @@ const tools = [
   @apply text-foreground;
 }
 :deep(.prose p) {
-  @apply my-2;
+  @apply mb-4 leading-relaxed;
 }
 :deep(.prose h1) {
-  @apply text-2xl font-bold my-4;
+  @apply text-3xl font-bold mt-8 mb-4;
 }
 :deep(.prose h2) {
-  @apply text-xl font-bold my-3;
+  @apply text-2xl font-bold mt-6 mb-3;
 }
 :deep(.prose h3) {
-  @apply text-lg font-bold my-2;
+  @apply text-xl font-bold mt-4 mb-2;
 }
 :deep(.prose ul) {
   @apply list-disc list-inside my-2;
