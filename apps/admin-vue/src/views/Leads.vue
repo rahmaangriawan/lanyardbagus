@@ -4,7 +4,7 @@ import { Card, Button } from '../components/ui'
 import { Inbox, Trash2, Loader2, Search, ExternalLink, Image, MessageSquare } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const leads = ref([])
 const loading = ref(true)

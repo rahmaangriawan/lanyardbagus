@@ -4,7 +4,7 @@ import { Button, Input, Card } from './ui'
 import { Image, X, Search, Check, Trash2 } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const props = defineProps({
   show: { type: Boolean, default: false }

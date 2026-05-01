@@ -4,7 +4,7 @@ import { Card, Button, Input, Label } from '../components/ui'
 import { Plus, Search, Trash2, Loader2, Edit2, Check, X, Tag } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const tags = ref([])
 const loading = ref(true)

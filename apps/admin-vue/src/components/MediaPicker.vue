@@ -4,7 +4,7 @@ import { Button, Card, Input } from './ui'
 import { Image, X, Search, Check } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const props = defineProps({
   modelValue: { type: [String, Number, Object], default: null },
