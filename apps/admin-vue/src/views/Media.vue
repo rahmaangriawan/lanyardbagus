@@ -168,6 +168,18 @@ function formatSize(bytes) {
       </div>
     </div>
 
+    <!-- Uploading Overlay -->
+    <div 
+      v-if="uploading" 
+      class="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none"
+    >
+      <div class="bg-card p-8 rounded-xl border shadow-lg text-center flex flex-col items-center">
+        <Loader2 class="w-16 h-16 text-primary mb-4 animate-spin" />
+        <h2 class="text-xl font-bold text-foreground">Sedang Mengupload...</h2>
+        <p class="text-muted-foreground mt-2">Mohon tunggu sebentar, gambar sedang diproses.</p>
+      </div>
+    </div>
+
     <!-- Media Grid -->
     <Card class="p-4">
       <div v-if="loading" class="p-8 text-center">
