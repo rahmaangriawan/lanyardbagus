@@ -1,0 +1,59 @@
+name: Deploy via FTP
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # --- BUILD FRONTEND (ADMIN VUE) ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Build Admin Vue
+        run: |
+          cd apps/admin-vue
+          npm install
+          npm run build
+          # Pindahkan hasil build ke public Laravel agar bisa dideploy bareng
+          mkdir -p ../api-laravel/public/dashboard
+          cp -r dist/* ../api-laravel/public/dashboard/
+
+      # --- BUILD BACKEND (LARAVEL) ---
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, curl, openssl, xml, zip
+
+      - name: Install Composer Dependencies
+        run: |
+          cd apps/api-laravel
+          composer install --no-dev --optimize-autoloader
+
+      # --- DEPLOY VIA FTP ---
+      - name: 🚀 Sync Files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: apps/api-laravel/
+          server-dir: public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            storage/*.key
+            .env
+            tests
+            phpunit.xml

@@ -1,0 +1,20 @@
+node_modules/
+vendor/
+.env
+.env.*
+!.env.example
+*.log
+
+# Build artifacts
+dist/
+build/
+.svelte-kit/
+apps/api-laravel/public/dashboard/
+apps/api-laravel/public/storage
+apps/api-laravel/storage/*.key
+
+# Uploads/Media
+apps/web/static/uploads
+apps/api/uploads
+storage/app/public/*
+!storage/app/public/.gitignore

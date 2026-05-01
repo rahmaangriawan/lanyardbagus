@@ -1,0 +1,19 @@
+{
+  "name": "lanyardbagus",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:admin-vue": "npm run dev --workspace admin-vue",
+    "dev:api-laravel": "cd apps/api-laravel && php artisan serve",
+    "build:admin-vue": "npm run build --workspace admin-vue",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier . --write"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}

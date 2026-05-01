@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Post;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class PostController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $query = Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id')
+            ->with(['category:id,name', 'featuredImage:id,url'])
+            ->latest();
+
+        if (! $request->user()?->isAdmin()) {
+            $query->where('status', 'PUBLISHED');
+        }
+
+        return response()->json($query->get());
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'title'              => ['required', 'string', 'max:255'],
+            'slug'               => ['nullable', 'string', 'max:191', 'unique:posts'],
+            'excerpt'            => ['nullable', 'string'],
+            'content'            => ['required', 'string'],
+            'status'             => ['in:DRAFT,PUBLISHED'],
+            'published_at'       => ['nullable', 'date'],
+            'category_id'        => ['nullable', 'exists:categories,id'],
+            'seo_title'          => ['nullable', 'string', 'max:255'],
+            'meta_description'   => ['nullable', 'string', 'max:500'],
+            'featured_image_id'  => ['nullable', 'exists:media,id'],
+            'tag_ids'            => ['nullable', 'array'],
+            'tag_ids.*'          => ['exists:tags,id'],
+        ]);
+
+        $tagIds = $data['tag_ids'] ?? [];
+        unset($data['tag_ids']);
+
+        $data['slug']      = $data['slug'] ?? Str::slug($data['title']);
+        $data['author_id'] = $request->user()->id;
+
+        if (($data['status'] ?? 'DRAFT') === 'PUBLISHED') {
+            $data['published_at'] = $data['published_at'] ?? now();
+        }
+
+        $post = Post::create($data);
+        $post->tags()->sync($tagIds);
+
+        return response()->json($post->load('tags:id,name,slug'), 201);
+    }
+
+    public function show(Post $post): JsonResponse
+    {
+        return response()->json($post->load('author:id,email', 'category:id,name,slug', 'featuredImage:id,url,file_name', 'tags:id,name,slug'));
+    }
+
+    public function update(Request $request, Post $post): JsonResponse
+    {
+        $data = $request->validate([
+            'title'              => ['sometimes', 'string', 'max:255'],
+            'slug'               => ['sometimes', 'string', 'max:191', 'unique:posts,slug,' . $post->id],
+            'excerpt'            => ['nullable', 'string'],
+            'content'            => ['sometimes', 'string'],
+            'status'             => ['in:DRAFT,PUBLISHED'],
+            'published_at'       => ['nullable', 'date'],
+            'category_id'        => ['nullable', 'exists:categories,id'],
+            'seo_title'          => ['nullable', 'string', 'max:255'],
+            'meta_description'   => ['nullable', 'string', 'max:500'],
+            'featured_image_id'  => ['nullable', 'exists:media,id'],
+            'tag_ids'            => ['nullable', 'array'],
+            'tag_ids.*'          => ['exists:tags,id'],
+        ]);
+
+        $tagIds = $data['tag_ids'] ?? null;
+        unset($data['tag_ids']);
+
+        if (isset($data['status']) && $data['status'] === 'PUBLISHED' && $post->status === 'DRAFT') {
+            $data['published_at'] = $data['published_at'] ?? now();
+        }
+
+        $post->update($data);
+        if ($tagIds !== null) $post->tags()->sync($tagIds);
+
+        return response()->json($post->load('tags:id,name,slug'));
+    }
+
+    public function destroy(Post $post): JsonResponse
+    {
+        $post->delete();
+
+        return response()->json(['ok' => true]);
+    }
+}
