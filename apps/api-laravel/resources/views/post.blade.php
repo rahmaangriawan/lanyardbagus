@@ -297,9 +297,7 @@
                 ->get();
             $relatedPosts = $relatedPosts->merge($fallback);
         }
-    @endphp
-
-    @if($relatedPosts->count() > 0)
+    @endphp    @if($relatedPosts->count() > 0)
         <section class="py-20 bg-cb-surface-soft border-t border-cb-hairline">
             <div class="max-w-[1200px] mx-auto px-6">
                 <div class="flex justify-between items-end mb-12">
@@ -375,5 +373,61 @@
             </div>
         </div>
     </section>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const content = document.querySelector('.prose');
+    if (!content) return;
+
+    // Find all H2 headings in the article content
+    const headings = content.querySelectorAll('h2');
+    
+    // Only show ToC if there are at least 2 headings
+    if (headings.length < 2) return;
+
+    const tocContainer = document.getElementById('toc-container');
+    const tocList = document.getElementById('toc-list');
+    if (!tocContainer || !tocList) return;
+
+    headings.forEach((heading, index) => {
+        // Create a unique ID for the heading if it doesn't have one
+        const id = 'section-' + (index + 1);
+        heading.id = id;
+        
+        // Add smooth scroll margin
+        heading.style.scrollMarginTop = '100px';
+
+        // Create the ToC list item
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + id;
+        a.textContent = heading.textContent;
+        a.className = 'hover:text-cb-blue transition-colors flex items-start gap-3';
+        
+        // Add a small bullet or number
+        const bullet = document.createElement('span');
+        bullet.textContent = (index + 1) + '.';
+        bullet.className = 'text-cb-muted font-mono shrink-0';
+        
+        a.prepend(bullet);
+        li.appendChild(a);
+        tocList.appendChild(li);
+    });
+
+    // Move ToC container before the first H2
+    const firstH2 = headings[0];
+    if (firstH2) {
+        firstH2.parentNode.insertBefore(tocContainer, firstH2);
+        tocContainer.classList.remove('hidden');
+    }
+    
+    // Re-initialize Lucide for the new icons in ToC
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
+@endpush
 
 @endsection
