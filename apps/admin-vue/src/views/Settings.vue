@@ -10,7 +10,7 @@ import axios from 'axios'
 const router = useRouter()
 const auth = useAuthStore()
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = 'https://lanyardbagus.com'
 
 const activeTab = ref('general')
 

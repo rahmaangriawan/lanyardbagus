@@ -4,7 +4,7 @@ import { Card, Button, Input } from '../components/ui'
 import { Plus, Image, Search, Trash2, Loader2, Copy, X } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = 'https://lanyardbagus.com'
 
 const media = ref([])
 const loading = ref(true)

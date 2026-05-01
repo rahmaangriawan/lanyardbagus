@@ -5,7 +5,7 @@ import { Button, Card, Input } from '../components/ui'
 import { Plus, Search, Trash2, Loader2, ChevronDown, Eye, Copy, Check } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = 'https://lanyardbagus.com'
 const router = useRouter()
 
 const posts = ref([])

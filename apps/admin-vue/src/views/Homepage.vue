@@ -14,7 +14,7 @@ const props = defineProps({
   }
 })
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = 'https://lanyardbagus.com'
 const loading = ref(true)
 const saving = ref(false)
 const saved = ref(false)

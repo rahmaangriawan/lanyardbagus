@@ -7,7 +7,7 @@ import MediaPickerModal from '../components/MediaPickerModal.vue'
 import { ArrowLeft, Save, Loader2, Image as ImageIcon, Calendar, Clock, Copy, Check, X, CheckCircle2, AlertCircle, Info, Eye } from 'lucide-vue-next'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = 'https://lanyardbagus.com'
 const route = useRoute()
 const router = useRouter()
 
