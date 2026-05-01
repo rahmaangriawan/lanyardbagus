@@ -13,11 +13,6 @@
         ['label' => 'Info Pengiriman', 'href' => '/pengiriman'],
         ['label' => 'Kebijakan & Syarat', 'href' => '/kebijakan'],
     ]);
-    $socialLinks = [
-        ['icon' => 'instagram', 'href' => 'instagram.com/lanyardbagus'],
-        ['icon' => 'facebook', 'href' => '#'],
-        ['icon' => 'youtube', 'href' => '#'],
-    ];
 @endphp
 
 <!-- Global Footer -->
@@ -85,14 +80,6 @@
                 &copy; {{ date('Y') }} {{ $settings->site_title ?? 'Lanyardbagus' }}. {{ data_get($footerData, 'copyright_text', 'Dibuat dengan dedikasi untuk branding identitas.') }}
             </p>
             <div class="flex items-center gap-6">
-                @foreach($socialLinks as $social)
-                    <a href="{{ str_starts_with($social['href'], 'http') ? $social['href'] : 'https://' . $social['href'] }}" 
-                       class="text-cb-muted hover:text-cb-blue transition-colors"
-                       target="_blank" rel="noopener noreferrer" title="{{ ucfirst($social['icon']) }}">
-                        <i data-lucide="{{ $social['icon'] }}" class="w-5 h-5"></i>
-                    </a>
-                @endforeach
-                <span class="w-px h-4 bg-cb-hairline mx-2"></span>
                 <a href="/kebijakan" class="text-cb-muted text-sm hover:text-cb-blue transition-colors">Kebijakan & Syarat</a>
                 <a href="/kontak" class="text-cb-muted text-sm hover:text-cb-blue transition-colors">Hubungi Kami</a>
             </div>

@@ -140,7 +140,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
 
                 <!-- Left Sidebar -->
-                <aside class="lg:col-span-4 hidden lg:block space-y-10">
+                <aside class="lg:col-span-4 hidden lg:block space-y-10 lg:sticky lg:top-28 self-start">
                     <!-- Promo Box (Replacing Newsletter) -->
                     <div class="bg-cb-surface-soft p-8 rounded-cb-xl border border-cb-hairline">
                         <h3 class="text-xl font-bold text-cb-ink mb-3">Pesan Lanyard Kustom Anda</h3>
@@ -184,6 +184,20 @@
                 <div class="lg:col-span-8">
                     <div
                         class="prose prose-lg prose-slate max-w-none prose-headings:font-bold prose-headings:text-cb-ink prose-p:text-cb-body prose-p:leading-relaxed prose-a:text-cb-blue hover:prose-a:text-cb-blue-active prose-img:rounded-cb-lg prose-blockquote:border-l-4 prose-blockquote:border-cb-blue prose-blockquote:bg-cb-surface-soft prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:font-medium prose-blockquote:text-cb-ink prose-blockquote:not-italic">
+                        
+                        <!-- Table of Contents Container (Moved via JS) -->
+                        <div id="toc-container" class="hidden mb-10 p-6 bg-cb-surface-soft border border-cb-hairline rounded-cb-xl not-prose">
+                            <h3 class="text-lg font-bold text-cb-ink mb-4 flex items-center gap-2">
+                                <i data-lucide="list" class="w-5 h-5 text-cb-blue"></i>
+                                Daftar Isi
+                            </h3>
+                            <nav>
+                                <ul id="toc-list" class="space-y-2.5 text-cb-body text-sm font-medium">
+                                    <!-- ToC items will be injected here -->
+                                </ul>
+                            </nav>
+                        </div>
+
                         {!! $post->content !!}
                     </div>
 

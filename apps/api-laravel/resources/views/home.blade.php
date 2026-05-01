@@ -1071,12 +1071,13 @@
 
     @include('partials.footer')
 
-    <script src="/js/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         (function() {
             function init() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
             document.addEventListener('DOMContentLoaded', init);
             if (document.readyState !== 'loading') init();
+            window.addEventListener('load', init);
         })();
 
         // Mobile Menu Logic

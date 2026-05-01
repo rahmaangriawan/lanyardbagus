@@ -241,7 +241,21 @@ Route::get('/author/{slug}', function ($slug) {
 });
 
 // ============================================================
-// SITEMAP XML
+// SITEMAP HTML (Human-readable)
+// ============================================================
+Route::get('/sitemap', function () {
+    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
+    $posts = Post::published()->get();
+    $categories = \App\Models\Category::all();
+    $statics = [
+        'jenis', 'produk', 'harga', 'faq', 'kontak', 'tentang', 'pengiriman', 'kebijakan', 'blog'
+    ];
+
+    return view('sitemap', compact('settings', 'posts', 'categories', 'statics'));
+});
+
+// ============================================================
+// SITEMAP XML (For search engines)
 // ============================================================
 Route::get('/sitemap.xml', function () {
     $posts = Post::published()->get();
@@ -250,7 +264,7 @@ Route::get('/sitemap.xml', function () {
         'jenis', 'produk', 'harga', 'faq', 'kontak', 'tentang', 'pengiriman', 'kebijakan', 'blog'
     ];
 
-    return response()->view('sitemap', compact('posts', 'categories', 'statics'))
+    return response()->view('sitemap-xml', compact('posts', 'categories', 'statics'))
         ->header('Content-Type', 'text/xml');
 });
 

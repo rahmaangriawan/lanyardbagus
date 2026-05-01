@@ -191,16 +191,18 @@
     </script>
     @stack('scripts')
 
-    <!-- Lucide Icons (Self-hosted) — loaded LAST so all DOM icons are available -->
-    <script src="/js/lucide.min.js"></script>
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
-        // Fallback if DOM already loaded
-        if (document.readyState !== 'loading') {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+        function initLucide() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
+        document.addEventListener('DOMContentLoaded', initLucide);
+        if (document.readyState !== 'loading') initLucide();
+        // Global observer for dynamic content
+        window.addEventListener('load', initLucide);
     </script>
 </body>
 </html>
