@@ -12,6 +12,16 @@ Route::get('/', function () {
     return view('home', compact('settings', 'banners', 'posts'));
 });
 
+// TEMPORARY: Route to run migrations on shared hosting without SSH
+Route::get('/migrate-db-production', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return 'Migration successful: ' . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) {
+        return 'Migration failed: ' . $e->getMessage();
+    }
+});
+
 // ============================================================
 // BLOG ARCHIVE ROUTES — must come BEFORE /blog/{slug}
 // ============================================================
