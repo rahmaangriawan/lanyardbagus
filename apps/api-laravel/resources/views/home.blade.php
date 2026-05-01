@@ -1073,9 +1073,11 @@
 
     <script src="/js/lucide.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
+        (function() {
+            function init() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
+            document.addEventListener('DOMContentLoaded', init);
+            if (document.readyState !== 'loading') init();
+        })();
 
         // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -1122,12 +1124,5 @@
         });
     </script>
 
-    <!-- Lucide Icons -->
-    <script src="/js/lucide.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
-    </script>
 </body>
 </html>

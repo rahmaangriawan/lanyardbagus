@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- CSP: Allow local and required external resources -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;">
-    
     <title>@yield('title', $settings->site_title ?? 'Lanyardbagus')</title>
     <meta name="description" content="@yield('meta_description', $settings->homepage_meta_description ?? '')">
     <link rel="canonical" href="{{ url()->current() }}">
