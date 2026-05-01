@@ -51,15 +51,31 @@ function slugify(text) {
     .replace(/-+$/, '');          // Trim - from end of text
 }
 
-function onAvatarChange(e) {
+async function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = (ev) => {
-    avatarPreview.value = ev.target.result
-    form.value.avatar_url = ev.target.result
+  
+  // Tampilkan preview sementara
+  avatarPreview.value = URL.createObjectURL(file)
+  
+  try {
+    // Upload gambar ke server
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await axios.post(`${API_URL}/api/admin/media`, formData, {
+      withCredentials: true,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
+    // Set URL asli dari server
+    form.value.avatar_url = res.data.url
+    avatarPreview.value = res.data.url
+  } catch (err) {
+    alert('Gagal mengupload foto: ' + (err.response?.data?.message || err.message))
+    // Kembalikan ke original
+    avatarPreview.value = originalData.value.avatar_url || ''
+    form.value.avatar_url = originalData.value.avatar_url || ''
   }
-  reader.readAsDataURL(file)
 }
 
 async function save() {
