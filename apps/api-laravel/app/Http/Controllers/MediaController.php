@@ -93,7 +93,23 @@ class MediaController extends Controller
         $width  = imagesx($image);
         $height = imagesy($image);
 
-        if (in_array($mimeType, ['image/png', 'image/gif'])) {
+        // Resize if too large (max 1600px width)
+        $maxWidth = 1600;
+        if ($width > $maxWidth) {
+            $newWidth = $maxWidth;
+            $newHeight = (int) ($height * ($maxWidth / $width));
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+
+            // Handle transparency
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            
+            imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            imagedestroy($image);
+            $image = $resized;
+            $width = $newWidth;
+            $height = $newHeight;
+        } elseif (in_array($mimeType, ['image/png', 'image/gif'])) {
             $canvas = imagecreatetruecolor($width, $height);
             imagealphablending($canvas, false);
             imagesavealpha($canvas, true);

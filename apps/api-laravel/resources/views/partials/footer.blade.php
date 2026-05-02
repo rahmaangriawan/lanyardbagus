@@ -23,7 +23,7 @@
             <!-- Brand Section -->
             <div class="space-y-6">
                 @if(isset($settings) && $settings->logoImage)
-                    <img src="{{ $settings->logoImage->url }}" alt="{{ $settings->site_title }}" class="h-8 w-auto">
+                    <img src="{{ $settings->logoImage->url }}" alt="{{ $settings->site_title }}" class="h-8 w-auto" width="284" height="56" loading="lazy" decoding="async">
                 @else
                     <span
                         class="text-xl font-bold tracking-tight text-cb-ink">{{ $settings->site_title ?? 'Lanyardbagus' }}</span>

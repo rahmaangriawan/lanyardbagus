@@ -17,7 +17,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+    </noscript>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -210,7 +214,7 @@
             <div class="flex items-center">
                 <a href="/">
                     @if($settings && $settings->logoImage)
-                    <img src="{{ $settings->logoImage->url }}" alt="{{ $settings->site_title ?? 'Logo' }}" class="h-8 w-auto">
+                    <img src="{{ $settings->logoImage->url }}" alt="{{ $settings->site_title ?? 'Logo' }}" class="h-8 w-auto" width="284" height="56" decoding="async">
                     @else
                     <span class="text-lg font-semibold text-cb-ink tracking-tight">{{ $settings->site_title ?? 'Lanyardbagus' }}</span>
                     @endif
@@ -269,7 +273,7 @@
     <section id="beranda" class="relative bg-cb-surface-dark min-h-[100vh] flex items-center overflow-hidden">
         <!-- Full-bleed background image -->
         <div class="absolute inset-0 z-0">
-            <img src="{{ data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp') }}" alt="" class="w-full h-full object-cover" aria-hidden="true">
+            <img src="{{ data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp') }}" alt="" class="w-full h-full object-cover" aria-hidden="true" fetchpriority="high" decoding="sync">
         </div>
         <!-- Gradient overlays for text readability -->
         <div class="absolute inset-0 z-[1] bg-gradient-to-r from-cb-surface-dark via-cb-surface-dark/85 to-cb-surface-dark/40"></div>
@@ -364,7 +368,7 @@
                 <div class="flex-1 relative w-full flex justify-center lg:justify-end">
                     <div class="tilt-wrap" id="tilt-wrap">
                         <div class="tilt-card" id="tilt-card">
-                            <img src="{{ data_get($hero, 'card_image_url', data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp')) }}" alt="{{ data_get($hero, 'title', 'Lanyard Premium') }}" class="tilt-img">
+                            <img src="{{ data_get($hero, 'card_image_url', data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp')) }}" alt="{{ data_get($hero, 'title', 'Lanyard Premium') }}" class="tilt-img" fetchpriority="high" decoding="sync">
                             <div class="tilt-glare" id="tilt-glare"></div>
                             <div class="tilt-badge">
                                 <div class="tilt-badge-dot"></div>
@@ -522,7 +526,7 @@
                 @php $firstStory = $storySteps[0] ?? []; @endphp
                 <div class="sticky top-24 z-10 flex flex-col md:flex-row items-center gap-10 bg-cb-canvas p-8 border border-cb-hairline rounded-cb-xl transition-transform duration-500">
                     <div class="w-full md:w-1/2 aspect-video md:aspect-[4/3] relative rounded-cb-lg overflow-hidden bg-cb-surface-soft border border-cb-hairline-soft">
-                        <img src="{{ data_get($firstStory, 'image_url', 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($firstStory, 'title', 'Material Lembut') }}" class="object-cover w-full h-full">
+                        <img src="{{ data_get($firstStory, 'image_url', 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($firstStory, 'title', 'Material Lembut') }}" class="object-cover w-full h-full" loading="lazy" decoding="async" width="800" height="600">
                     </div>
                     <div class="w-full md:w-1/2 flex flex-col items-start text-left">
                         <span class="inline-flex px-4 py-1.5 rounded-cb-pill bg-cb-surface-strong text-cb-ink text-sm font-semibold mb-6">{{ data_get($firstStory, 'number', '01') }}. Sentuhan Pertama</span>
@@ -536,7 +540,7 @@
                 @php $secondStory = $storySteps[1] ?? []; @endphp
                 <div class="sticky top-28 z-20 flex flex-col md:flex-row-reverse items-center gap-10 bg-cb-surface-soft p-8 border border-cb-hairline rounded-cb-xl shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-transform duration-500">
                     <div class="w-full md:w-1/2 aspect-video md:aspect-[4/3] relative rounded-cb-lg overflow-hidden bg-cb-surface-strong border border-cb-hairline-soft">
-                        <img src="{{ data_get($secondStory, 'image_url', 'https://images.unsplash.com/photo-1614316315266-9e9ebdb1ce45?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($secondStory, 'title', 'Cetak Resolusi Tinggi') }}" class="object-cover w-full h-full">
+                        <img src="{{ data_get($secondStory, 'image_url', 'https://images.unsplash.com/photo-1614316315266-9e9ebdb1ce45?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($secondStory, 'title', 'Cetak Resolusi Tinggi') }}" class="object-cover w-full h-full" loading="lazy" decoding="async" width="800" height="600">
                     </div>
                     <div class="w-full md:w-1/2 flex flex-col items-start text-left">
                         <span class="inline-flex px-4 py-1.5 rounded-cb-pill bg-cb-surface-strong text-cb-ink text-sm font-semibold mb-6">{{ data_get($secondStory, 'number', '02') }}. Visual yang Berbicara</span>
@@ -551,7 +555,7 @@
                 @php $thirdStory = $storySteps[2] ?? []; @endphp
                 <div class="sticky top-32 z-30 flex flex-col md:flex-row items-center gap-10 bg-cb-surface-dark text-white p-8 border border-white/5 rounded-cb-xl shadow-lg transition-transform duration-500">
                     <div class="w-full md:w-1/2 aspect-video md:aspect-[4/3] relative rounded-cb-lg overflow-hidden bg-cb-surface-dark-el border border-white/5">
-                        <img src="{{ data_get($thirdStory, 'image_url', 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($thirdStory, 'title', 'Pengiriman Tepat Waktu') }}" class="object-cover w-full h-full opacity-90">
+                        <img src="{{ data_get($thirdStory, 'image_url', 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=800&q=80') }}" alt="{{ data_get($thirdStory, 'title', 'Pengiriman Tepat Waktu') }}" class="object-cover w-full h-full opacity-90" loading="lazy" decoding="async" width="800" height="600">
                     </div>
                     <div class="w-full md:w-1/2 flex flex-col items-start text-left">
                         <span class="inline-flex px-4 py-1.5 rounded-cb-pill bg-cb-surface-dark-el text-cb-muted-soft text-sm font-semibold mb-6">{{ data_get($thirdStory, 'number', '03') }}. Eksekusi Tanpa Kompromi</span>
@@ -753,7 +757,7 @@
                     <a href="{{ $itemHref }}" class="flex-[1_1_300px] max-w-[380px] flex flex-col group cursor-pointer bg-cb-canvas border border-cb-hairline rounded-cb-xl p-6 transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                         <div class="relative w-full aspect-[4/3] rounded-cb-lg overflow-hidden mb-5 bg-cb-surface-soft border border-cb-hairline-soft">
                             @if(filled($itemImage))
-                                <img src="{{ $itemImage }}" alt="{{ data_get($item, 'title', 'Lanyard') }}" class="absolute inset-0 w-full h-full object-cover">
+                                <img src="{{ $itemImage }}" alt="{{ data_get($item, 'title', 'Lanyard') }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async">
                             @else
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <i data-lucide="{{ $itemIcon }}" class="w-10 h-10 text-cb-hairline"></i>
