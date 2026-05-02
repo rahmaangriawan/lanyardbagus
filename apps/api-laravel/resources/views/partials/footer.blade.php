@@ -36,7 +36,7 @@
 
             <!-- Navigation -->
             <div>
-                <h4 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'navigation_title', 'Navigasi') }}</h4>
+                <h3 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'navigation_title', 'Navigasi') }}</h3>
                 <ul class="space-y-4">
                     @foreach($navLinks as $link)
                         <li><a href="{{ data_get($link, 'href', '#') }}" class="text-cb-body text-sm hover:text-cb-blue transition-colors">{{ data_get($link, 'label', 'Menu') }}</a></li>
@@ -46,7 +46,7 @@
 
             <!-- Blog Categories / Insights -->
             <div>
-                <h4 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'insights_title', 'Insights') }}</h4>
+                <h3 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'insights_title', 'Insights') }}</h3>
                 <ul class="space-y-4">
                     @foreach($insightsLinks as $link)
                         <li><a href="{{ data_get($link, 'href', '#') }}" class="text-cb-body text-sm hover:text-cb-blue transition-colors">{{ data_get($link, 'label', 'Menu') }}</a></li>
@@ -65,7 +65,7 @@
 
             <!-- Layanan -->
             <div>
-                <h4 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'layanan_title', 'Layanan') }}</h4>
+                <h3 class="text-cb-ink font-bold text-sm uppercase tracking-widest mb-6">{{ data_get($footerData, 'layanan_title', 'Layanan') }}</h3>
                 <ul class="space-y-4">
                     @foreach($layananLinks as $link)
                         <li><a href="{{ data_get($link, 'href', '#') }}" class="text-cb-body text-sm hover:text-cb-blue transition-colors">{{ data_get($link, 'label', 'Menu') }}</a></li>
