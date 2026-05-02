@@ -15,7 +15,11 @@ class HomepageController extends Controller
             return response()->json($this->defaultPayload());
         }
 
-        return response()->json($this->serialize($this->getSingleton()));
+        $data = \Illuminate\Support\Facades\Cache::remember('homepage_data', 86400, function () {
+            return $this->serialize($this->getSingleton());
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request): JsonResponse
@@ -33,6 +37,9 @@ class HomepageController extends Controller
         $settings = $this->getSingleton();
         $settings->homepage_data = $data['homepage_data'];
         $settings->save();
+
+        \Illuminate\Support\Facades\Cache::forget('homepage_data');
+        \Illuminate\Support\Facades\Cache::forget('site_settings');
 
         return response()->json($this->serialize($settings));
     }

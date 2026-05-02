@@ -11,13 +11,24 @@ class PostController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $isAdmin = $request->user()?->isAdmin();
+        
+        // Cache public posts for 1 hour
+        if (! $isAdmin) {
+            $posts = \Illuminate\Support\Facades\Cache::remember('posts_public_list', 3600, function () {
+                return Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id')
+                    ->with(['category:id,name', 'featuredImage:id,url'])
+                    ->where('status', 'PUBLISHED')
+                    ->latest()
+                    ->get();
+            });
+            return response()->json($posts);
+        }
+
+        // Admin always gets fresh data
         $query = Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id')
             ->with(['category:id,name', 'featuredImage:id,url'])
             ->latest();
-
-        if (! $request->user()?->isAdmin()) {
-            $query->where('status', 'PUBLISHED');
-        }
 
         return response()->json($query->get());
     }
@@ -52,12 +63,19 @@ class PostController extends Controller
         $post = Post::create($data);
         $post->tags()->sync($tagIds);
 
+        \Illuminate\Support\Facades\Cache::forget('posts_public_list');
+
         return response()->json($post->load('tags:id,name,slug'), 201);
     }
 
     public function show(Post $post): JsonResponse
     {
-        return response()->json($post->load('author:id,email', 'category:id,name,slug', 'featuredImage:id,url,file_name', 'tags:id,name,slug'));
+        $cacheKey = "post_show_{$post->slug}";
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($post) {
+            return $post->load('author:id,email', 'category:id,name,slug', 'featuredImage:id,url,file_name', 'tags:id,name,slug');
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Post $post): JsonResponse
@@ -87,11 +105,17 @@ class PostController extends Controller
         $post->update($data);
         if ($tagIds !== null) $post->tags()->sync($tagIds);
 
+        \Illuminate\Support\Facades\Cache::forget('posts_public_list');
+        \Illuminate\Support\Facades\Cache::forget("post_show_{$post->slug}");
+
         return response()->json($post->load('tags:id,name,slug'));
     }
 
     public function destroy(Post $post): JsonResponse
     {
+        \Illuminate\Support\Facades\Cache::forget('posts_public_list');
+        \Illuminate\Support\Facades\Cache::forget("post_show_{$post->slug}");
+        
         $post->delete();
 
         return response()->json(['ok' => true]);

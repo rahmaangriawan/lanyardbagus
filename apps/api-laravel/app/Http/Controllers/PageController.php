@@ -36,7 +36,9 @@ class PageController extends Controller
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['title']);
 
-        return response()->json(Page::create($data), 201);
+        $page = Page::create($data);
+        \Illuminate\Support\Facades\Cache::forget('pages_list');
+        return response()->json($page, 201);
     }
 
     public function show(Page $page): JsonResponse
@@ -66,12 +68,16 @@ class PageController extends Controller
         }
 
         $page->update($data);
+        \Illuminate\Support\Facades\Cache::forget("page_public_{$page->slug}");
+        \Illuminate\Support\Facades\Cache::forget('pages_list');
 
         return response()->json($page->load('children:id,title,slug,parent_id'));
     }
 
     public function destroy(Page $page): JsonResponse
     {
+        \Illuminate\Support\Facades\Cache::forget("page_public_{$page->slug}");
+        \Illuminate\Support\Facades\Cache::forget('pages_list');
         $page->delete();
 
         return response()->json(['ok' => true]);
@@ -80,11 +86,14 @@ class PageController extends Controller
     /** Public show by slug, only if published. */
     public function publicShow(string $slug): JsonResponse
     {
-        $page = Page::where('slug', $slug)
-            ->where('is_published', true)
-            ->with('featuredImage:id,url,file_name')
-            ->firstOrFail();
+        $cacheKey = "page_public_{$slug}";
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($slug) {
+            return Page::where('slug', $slug)
+                ->where('is_published', true)
+                ->with('featuredImage:id,url,file_name')
+                ->firstOrFail();
+        });
 
-        return response()->json($page);
+        return response()->json($data);
     }
 }
