@@ -369,7 +369,7 @@
                 <div class="flex-1 relative w-full flex justify-center lg:justify-end">
                     <div class="tilt-wrap" id="tilt-wrap">
                         <div class="tilt-card" id="tilt-card">
-                            <img src="{{ data_get($hero, 'card_image_url', data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp')) }}" alt="{{ data_get($hero, 'title', 'Lanyard Premium') }}" class="tilt-img" fetchpriority="high" decoding="sync">
+                            <img src="{{ data_get($hero, 'card_image_url', data_get($hero, 'image_url', '/storage/media/hero-lanyard-5bc7f4.webp')) }}" alt="{{ data_get($hero, 'title', 'Lanyard Premium') }}" class="tilt-img" fetchpriority="high" decoding="async" loading="eager">
                             <div class="tilt-glare" id="tilt-glare"></div>
                             <div class="tilt-badge">
                                 <div class="tilt-badge-dot"></div>
@@ -397,7 +397,6 @@
                             transform-style: preserve-3d;
                             transition: transform 0.15s ease-out, box-shadow 0.3s ease;
                             will-change: transform;
-                            animation: tilt-idle 6s ease-in-out infinite;
                         }
                         .tilt-card:hover { animation: none; }
                         @keyframes tilt-idle {
