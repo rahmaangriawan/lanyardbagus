@@ -8,6 +8,13 @@
     <meta name="description" content="@yield('meta_description', $settings->homepage_meta_description ?? '')">
     <link rel="canonical" href="{{ url()->current() }}">
     
+    @if(isset($settings) && $settings->google_site_verification)
+    <meta name="google-site-verification" content="{{ $settings->google_site_verification }}">
+    @endif
+    @if(isset($settings) && $settings->bing_site_verification)
+    <meta name="msvalidate.01" content="{{ $settings->bing_site_verification }}">
+    @endif
+    
     @if(isset($settings) && $settings->faviconImage)
     <link rel="icon" type="image/x-icon" href="{{ $settings->faviconImage->url }}">
     @endif
