@@ -56,8 +56,4 @@ class User extends Authenticatable
         return in_array($this->role?->name, ['ADMIN', 'EDITOR']);
     }
 
-    public function getRememberTokenName(): string
-    {
-        return '';
-    }
 }

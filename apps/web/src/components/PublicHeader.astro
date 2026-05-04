@@ -1,0 +1,143 @@
+---
+interface Props {
+  seoGlobal?: Record<string, any> | null;
+}
+
+const { seoGlobal = null } = Astro.props;
+const siteTitle = seoGlobal?.site_title?.trim() || seoGlobal?.homepage_seo_title?.trim() || 'Lanyardbagus';
+const waNumber = seoGlobal?.whatsapp_number?.replace(/\D/g, '') || '628123456789';
+const waMessage = encodeURIComponent('Halo, saya ingin menanyakan cetak lanyard');
+const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
+
+const navLinks = [
+  { name: 'Beranda', href: '/#beranda' },
+  { name: 'Tentang', href: '/#tentang' },
+  { name: 'Cerita', href: '/#cerita' },
+  { name: 'Blog', href: '/#blog' },
+  { name: 'Kontak', href: '/#kontak' }
+];
+---
+
+<header class="header" id="mainHeader" role="banner">
+  <div class="header__inner">
+    <div class="header__left">
+      <a href="/" class="brand" aria-label={`${siteTitle} - Beranda`}>
+        <img src="/storage/media/logo-lanyard-bagus-putih-2deb1b.webp" alt={siteTitle} class="brand__image brand__image--hero" />
+        <div class="brand__fallback">
+          <div class="brand__icon">L</div>
+          <span class="brand__name">{siteTitle}</span>
+        </div>
+      </a>
+    </div>
+
+    <nav class="nav nav--desktop" aria-label="Navigasi Utama">
+      {navLinks.map(link => (
+        <a href={link.href} class="nav__link">{link.name}</a>
+      ))}
+    </nav>
+
+    <div class="header__right">
+      <div class="actions">
+        <a href={waLink} target="_blank" rel="nofollow noopener noreferrer" class="cta-pill">
+          Pesan Sekarang
+        </a>
+
+        <button class="menu-trigger" id="menuTrigger" aria-label="Toggle Menu">
+          <div class="menu-trigger__box">
+            <span class="line line--1"></span>
+            <span class="line line--2"></span>
+            <span class="line line--3"></span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu" style="display:none">
+    <nav class="mobile-nav">
+      {navLinks.map(link => (
+        <a href={link.href} class="mobile-nav__link" data-close-menu>{link.name}</a>
+      ))}
+      <a href={waLink} target="_blank" rel="nofollow noopener noreferrer" class="mobile-cta">
+        Pesan Sekarang
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: transparent; transition: background 200ms ease, border-bottom 200ms ease; border-bottom: 1px solid transparent; }
+  .header.header--scrolled { background: #ffffff; border-bottom: 1px solid #dee1e6; }
+  .header__inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .header__left { display: flex; align-items: center; flex-shrink: 0; }
+  @media (min-width: 1024px) { .header__left { width: 240px; } }
+  .header__right { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
+  @media (min-width: 1024px) { .header__right { width: 240px; } }
+  .brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #0a0b0d; }
+  .header:not(.header--scrolled) .brand { color: white; }
+  .brand__icon { width: 32px; height: 32px; background: #0052ff; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; border-radius: 8px; font-size: 1.25rem; }
+  .brand__name { font-weight: 700; font-size: 1.125rem; letter-spacing: -0.02em; }
+  .brand__image { height: 32px; width: auto; max-width: 180px; object-fit: contain; flex-shrink: 0; }
+  .brand__image--scrolled { display: none; }
+  .nav--desktop { display: none; }
+  @media (min-width: 1024px) { .nav--desktop { display: flex; align-items: center; gap: 2rem; } }
+  .nav__link { font-weight: 500; color: #5b616e; text-decoration: none; font-size: 0.875rem; transition: color 200ms ease; }
+  .header:not(.header--scrolled) .nav__link { color: rgba(255, 255, 255, 0.7); }
+  .nav__link:hover { color: #0052ff; }
+  .header:not(.header--scrolled) .nav__link:hover { color: white; }
+  .actions { display: flex; align-items: center; gap: 1.5rem; }
+  .cta-pill { display: none; background: #0052ff; color: white; padding: 0 1.25rem; height: 40px; align-items: center; justify-content: center; border-radius: 100px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: background 200ms ease; }
+  @media (min-width: 1024px) { .cta-pill { display: flex; } }
+  .cta-pill:hover { background: #003ecc; }
+  .menu-trigger { background: transparent; border: none; padding: 0; cursor: pointer; display: flex; }
+  @media (min-width: 1024px) { .menu-trigger { display: none; } }
+  .menu-trigger__box { display: flex; flex-direction: column; gap: 4px; }
+  .line { width: 20px; height: 2px; background: #0a0b0d; border-radius: 2px; transition: transform 200ms ease, opacity 200ms ease; }
+  .header:not(.header--scrolled) .line { background: white; }
+  .menu-trigger.menu-trigger--open .line { background: #0a0b0d; }
+  .menu-trigger--open .line--1 { transform: translateY(6px) rotate(45deg); }
+  .menu-trigger--open .line--2 { opacity: 0; }
+  .menu-trigger--open .line--3 { transform: translateY(-6px) rotate(-45deg); }
+  .mobile-menu { position: fixed; top: 64px; left: 0; right: 0; background: white; padding: 2rem; z-index: 999; overflow-y: auto; border-bottom: 1px solid #dee1e6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+  .mobile-nav { display: flex; flex-direction: column; gap: 1.5rem; }
+  .mobile-nav__link { font-size: 1.25rem; font-weight: 500; color: #0a0b0d; text-decoration: none; }
+  .mobile-cta { margin-top: 1rem; background: #0052ff; color: white; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 100px; font-weight: 600; text-decoration: none; }
+</style>
+
+<script>
+  const header = document.getElementById('mainHeader');
+  const menuTrigger = document.getElementById('menuTrigger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  let isMenuOpen = false;
+
+  function handleScroll() {
+    if (window.scrollY > 50) {
+      header?.classList.add('header--scrolled');
+    } else if (!isMenuOpen) {
+      header?.classList.remove('header--scrolled');
+    }
+  }
+  window.addEventListener('scroll', handleScroll);
+
+  menuTrigger?.addEventListener('click', () => {
+    isMenuOpen = !isMenuOpen;
+    if (mobileMenu) {
+      mobileMenu.style.display = isMenuOpen ? 'block' : 'none';
+    }
+    menuTrigger?.classList.toggle('menu-trigger--open', isMenuOpen);
+    if (isMenuOpen) {
+      header?.classList.add('header--scrolled');
+    } else if (window.scrollY <= 50) {
+      header?.classList.remove('header--scrolled');
+    }
+  });
+
+  document.querySelectorAll('[data-close-menu]').forEach(link => {
+    link.addEventListener('click', () => {
+      isMenuOpen = false;
+      if (mobileMenu) mobileMenu.style.display = 'none';
+      menuTrigger?.classList.remove('menu-trigger--open');
+      if (window.scrollY <= 50) header?.classList.remove('header--scrolled');
+    });
+  });
+</script>
