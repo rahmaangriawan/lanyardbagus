@@ -93,6 +93,30 @@ Route::get('/sync-media-production', function () {
     return $output . "<br><strong>Done! Imported: $count baru, Skipped: $skipped sudah ada.</strong>";
 });
 
+// TEMPORARY: Clear all caches
+Route::get('/clear-cache-production', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        return '<h3>Cache Cleared!</h3><p>All caches have been cleared.</p>';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
+// TEMPORARY: Debug site verification
+Route::get('/debug-settings', function () {
+    $settings = SiteSetting::first();
+    return [
+        'google_site_verification' => $settings->google_site_verification ?? 'NULL',
+        'bing_site_verification' => $settings->bing_site_verification ?? 'NULL',
+        'site_title' => $settings->site_title ?? 'NULL',
+        'has_settings' => $settings ? true : false,
+    ];
+});
+
 // ============================================================
 // BLOG ARCHIVE ROUTES — must come BEFORE /blog/{slug}
 // ============================================================
