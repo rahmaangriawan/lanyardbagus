@@ -180,9 +180,12 @@ async function loadSettings() {
       axios.get(`${API_URL}/api/settings`),
       axios.get(`${API_URL}/api/admin/system-settings`, { withCredentials: true }).catch(() => ({ data: {} }))
     ])
-    
+
     const siteData = siteRes.data || {}
     const sysData = systemRes.data || {}
+
+    console.log('Loaded site settings:', siteData)
+    console.log('Loaded system settings:', sysData)
 
     settings.value = {
       site_title: siteData.site_title || '',

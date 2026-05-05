@@ -9,11 +9,15 @@
     <link rel="canonical" href="{{ url()->current() }}">
     
     <!-- Site Verification Tags -->
-    @if(isset($settings) && $settings->google_site_verification)
-    <meta name="google-site-verification" content="{{ $settings->google_site_verification }}">
+    @php
+        $gsc = $settings->google_site_verification ?? \App\Models\Setting::get('google_search_console') ?? null;
+        $bing = $settings->bing_site_verification ?? \App\Models\Setting::get('bing_webmaster') ?? null;
+    @endphp
+    @if($gsc)
+    <meta name="google-site-verification" content="{{ $gsc }}">
     @endif
-    @if(isset($settings) && $settings->bing_site_verification)
-    <meta name="msvalidate.01" content="{{ $settings->bing_site_verification }}">
+    @if($bing)
+    <meta name="msvalidate.01" content="{{ $bing }}">
     @endif
     
     @if(isset($settings) && $settings->faviconImage)
