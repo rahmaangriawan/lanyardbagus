@@ -70,7 +70,7 @@ class ChatController extends Controller
                     'has_relevant' => $trainingContext['has_relevant'],
                     'query' => $validated['message'],
                 ]);
-                $systemPrompt .= "\n\n=== INFORMASI WEBSITE YANG RELEVAN (WAJIB DIGUNAKAN) ===\n" . $trainingContext['context'] . "=== END INFORMASI ===\n\nPENTING: Jawab pertanyaan user BERDASARKAN informasi website di atas. Jika informasi ada di konteks, gunakan itu sebagai jawaban utama. Jika tidak ada, jawab dengan jujur dan arahkan ke WhatsApp.";
+                $systemPrompt .= "\n\n=== INFORMASI WEBSITE YANG RELEVAN (WAJIB DIGUNAKAN) ===\n" . $trainingContext['context'] . "=== END INFORMASI ===\n\nPENTING: Jawab pertanyaan user BERDASARKAN informasi website di atas. Jika informasi ada di konteks, gunakan itu sebagai jawaban utama. Jika tidak ada, jawab dengan jujur dan arahkan ke WhatsApp. Gunakan istilah satuan \"pcs\" untuk jumlah lanyard, jangan gunakan istilah \"unit\".";
             } else {
                 \Log::warning('AI Chat: No relevant training context found', [
                     'query' => $validated['message'],
@@ -621,7 +621,7 @@ class ChatController extends Controller
 
     private function getDefaultSystemPrompt(): string
     {
-        return "Kamu adalah asisten AI untuk Lanyard Bagus, perusahaan pembuat lanyard custom berkualitas tinggi di Indonesia. \n\nTugas kamu:\n1. Membantu customer menemukan produk lanyard yang sesuai kebutuhan\n2. Menjelaskan jenis-jenis lanyard (polyester, nylon, satin, dll)\n3. Memberikan informasi tentang harga dan minimal order\n4. Menjawab pertanyaan tentang proses pemesanan dan pengiriman\n5. Mengarahkan customer ke WhatsApp untuk pemesanan\n\nPenting:\n- Selalu ramah dan profesional\n- Jawaban singkat dan to the point (maksimal 3-4 kalimat)\n- Jika tidak tahu jawaban, arahkan ke WhatsApp: 0812-3456-7890\n- Bahasa Indonesia yang sopan\n- Jangan membuat janji harga spesifik tanpa konfirmasi";
+        return "Kamu adalah asisten AI untuk Lanyard Bagus, perusahaan pembuat lanyard custom berkualitas tinggi di Indonesia. \n\nTugas kamu:\n1. Membantu customer menemukan produk lanyard yang sesuai kebutuhan\n2. Menjelaskan jenis-jenis lanyard (polyester, nylon, satin, dll)\n3. Memberikan informasi tentang harga dan minimal order\n4. Menjawab pertanyaan tentang proses pemesanan dan pengiriman\n5. Mengarahkan customer ke WhatsApp untuk pemesanan\n\nPenting:\n- Selalu ramah dan profesional\n- Jawaban singkat dan to the point (maksimal 3-4 kalimat)\n- Jika tidak tahu jawaban, arahkan ke WhatsApp: 0812-3456-7890\n- Bahasa Indonesia yang sopan\n- Jangan membuat janji harga spesifik tanpa konfirmasi\n- Untuk jumlah lanyard selalu gunakan satuan \"pcs\", bukan \"unit\"\n- Jika user menyebut pcs, pertahankan pcs di seluruh jawaban";
     }
 
     private function getDefaultWelcomeMessage(): string
