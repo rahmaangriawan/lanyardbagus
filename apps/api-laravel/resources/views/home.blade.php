@@ -1623,31 +1623,49 @@
     </style>
 
     <script>
-        (function() {
-            const API_URL = '{{ url('/') }}';
-            let sessionId = localStorage.getItem('chat_session_id');
-            if (!sessionId) {
-                sessionId = 'chat_' + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('chat_session_id', sessionId);
-            }
+        // Ensure lucide is loaded before initializing chat widget
+        if (typeof lucide === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com/lucide@latest';
+            script.onload = function() {
+                initChatWidget();
+            };
+            document.head.appendChild(script);
+        } else {
+            initChatWidget();
+        }
 
-            // Get stored user info
-            const storedUserInfo = JSON.parse(localStorage.getItem('chat_user_info') || 'null');
-            let userInfo = storedUserInfo || null;
+        function initChatWidget() {
+            (function() {
+                const API_URL = '{{ url('/') }}';
+                let sessionId = localStorage.getItem('chat_session_id');
+                if (!sessionId) {
+                    sessionId = 'chat_' + Math.random().toString(36).substring(2, 15);
+                    localStorage.setItem('chat_session_id', sessionId);
+                }
 
-            const chatToggle = document.getElementById('chat-toggle-btn');
-            const chatBox = document.getElementById('chat-box');
-            const chatClose = document.getElementById('chat-close-btn');
-            const chatClose2 = document.getElementById('chat-close-btn-2');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const chatMessages = document.getElementById('chat-messages');
-            const userForm = document.getElementById('user-info-form');
-            const userFormContainer = document.getElementById('chat-user-form');
-            const messagesContainer = document.getElementById('chat-messages-container');
+                // Get stored user info
+                const storedUserInfo = JSON.parse(localStorage.getItem('chat_user_info') || 'null');
+                let userInfo = storedUserInfo || null;
 
-            let isOpen = false;
-            let isTyping = false;
+                const chatToggle = document.getElementById('chat-toggle-btn');
+                const chatBox = document.getElementById('chat-box');
+                const chatClose = document.getElementById('chat-close-btn');
+                const chatClose2 = document.getElementById('chat-close-btn-2');
+                const chatForm = document.getElementById('chat-form');
+                const chatInput = document.getElementById('chat-input');
+                const chatMessages = document.getElementById('chat-messages');
+                const userForm = document.getElementById('user-info-form');
+                const userFormContainer = document.getElementById('chat-user-form');
+                const messagesContainer = document.getElementById('chat-messages-container');
+
+                if (!chatToggle || !chatBox) {
+                    console.error('Chat widget elements not found');
+                    return;
+                }
+
+                let isOpen = false;
+                let isTyping = false;
 
             // Load chat settings
             async function loadChatSettings() {
@@ -1854,7 +1872,8 @@
 
             // Initialize
             loadChatSettings();
-        })();
+            })();
+        }
     </script>
 
 </body>
