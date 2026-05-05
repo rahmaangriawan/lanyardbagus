@@ -81,8 +81,19 @@ const routes = [
       },
       {
         path: 'catalog',
-        name: 'Catalog',
-        component: () => import('../views/Catalog.vue')
+        redirect: '/catalog/products'
+      },
+      {
+        path: 'catalog/products',
+        name: 'CatalogProducts',
+        component: () => import('../views/Catalog.vue'),
+        props: { section: 'products' }
+      },
+      {
+        path: 'catalog/categories',
+        name: 'CatalogCategories',
+        component: () => import('../views/Catalog.vue'),
+        props: { section: 'categories' }
       },
       {
         path: 'categories',

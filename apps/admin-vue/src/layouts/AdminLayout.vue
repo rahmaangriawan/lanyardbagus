@@ -79,7 +79,8 @@ const auth = useAuthStore()
 const collapsed = ref(false)
 const expandedMenus = ref({
   postingan: false,
-  beranda: false
+  beranda: false,
+  katalog: false
 })
 
 const user = computed(() => auth.user)
@@ -114,8 +115,7 @@ const berandaChildren = computed(() => {
 
 const middleMenus = computed(() => {
   return [
-    { path: '/media', label: 'Media', icon: Image },
-    { path: '/catalog', label: 'Katalog', icon: Boxes }
+    { path: '/media', label: 'Media', icon: Image }
   ]
 })
 const faviconUrl = ref(null)
@@ -211,6 +211,17 @@ const berandaMenu = {
 const leadsMenu = { path: '/leads', label: 'Leads', icon: Inbox }
 const ordersMenu = { path: '/orders', label: 'Orders', icon: ShoppingCart }
 
+// Katalog menu with submenu
+const katalogMenu = {
+  key: 'katalog',
+  label: 'Katalog',
+  icon: Boxes,
+  children: [
+    { path: '/catalog/products', label: 'Produk', icon: Boxes },
+    { path: '/catalog/categories', label: 'Kategori Produk', icon: Folder },
+  ]
+}
+
 // Lainnya section
 const lainnyaLabel = 'Lainnya'
 const lainnyaMenus = computed(() => {
@@ -259,6 +270,9 @@ onMounted(() => {
   }
   if (isMenuActive(berandaChildren)) {
     expandedMenus.value.beranda = true
+  }
+  if (isMenuActive(katalogMenu.children)) {
+    expandedMenus.value.katalog = true
   }
 })
 </script>
@@ -361,6 +375,44 @@ onMounted(() => {
               </router-link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+        </div>
+
+        <!-- Katalog with submenu -->
+        <div class="px-3 mt-1">
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              :isActive="isMenuActive(katalogMenu.children)"
+              @click="collapsed ? $router.push('/catalog/products') : toggleSubmenu('katalog')"
+              class="cursor-pointer w-full"
+              :class="collapsed ? 'justify-center' : ''"
+            >
+              <component :is="katalogMenu.icon" class="w-[18px] h-[18px] flex-shrink-0" />
+              <span v-show="!collapsed" class="flex-1 text-[13px] text-left">{{ katalogMenu.label }}</span>
+              <ChevronDown 
+                v-show="!collapsed" 
+                :class="['w-3.5 h-3.5 transition-transform duration-200', expandedMenus.katalog ? 'rotate-180' : '']" 
+              />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <!-- Submenu -->
+          <div v-show="!collapsed && expandedMenus.katalog" class="relative mt-0.5">
+            <div class="absolute left-[9px] top-0 bottom-2 w-px bg-border"></div>
+            <div class="pl-6 space-y-0.5">
+              <SidebarMenuItem v-for="child in katalogMenu.children" :key="child.path">
+                <SidebarMenuButton 
+                  :isActive="isActive(child.path)"
+                  asChild
+                  class="py-1.5 w-full"
+                >
+                  <router-link :to="child.path" class="flex items-center gap-2.5">
+                    <component :is="child.icon" class="w-[16px] h-[16px] flex-shrink-0 opacity-70" />
+                    <span class="text-[12px] text-muted-foreground">{{ child.label }}</span>
+                  </router-link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </div>
         </div>
 
         <!-- Beranda with submenu -->

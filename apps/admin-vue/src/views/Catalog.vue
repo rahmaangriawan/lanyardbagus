@@ -11,7 +11,7 @@
     </div>
 
     <!-- Categories -->
-    <div class="bg-white border rounded-xl p-5">
+    <div v-if="section === 'categories'" class="bg-white border rounded-xl p-5">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Kategori</h2>
         <button @click="showCatForm = !showCatForm" class="px-3 py-2 text-sm bg-black text-white rounded-lg">{{ showCatForm ? 'Tutup' : 'Tambah Kategori' }}</button>
@@ -60,7 +60,7 @@
     </div>
 
     <!-- Products -->
-    <div class="bg-white border rounded-xl p-5">
+    <div v-if="section === 'products'" class="bg-white border rounded-xl p-5">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <h2 class="text-lg font-semibold">Produk</h2>
         <div class="flex items-center gap-2">
@@ -166,14 +166,32 @@ const catForm = ref({ name: '', slug: '', description: '', image: '', is_active:
 const prodForm = ref({ category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', specsJson: '' })
 
 const editProd = ref(null)
+const editingCategoryId = ref(null)
+
+const props = defineProps({
+  section: { type: String, default: 'products' }
+})
 
 function formatRupiah(num) {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID')
 }
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+  return null
+}
+
+function xsrfHeaders() {
+  const token = getCookie('XSRF-TOKEN')
+  return token ? { 'X-XSRF-TOKEN': decodeURIComponent(token), 'X-Requested-With': 'XMLHttpRequest' } : { 'X-Requested-With': 'XMLHttpRequest' }
+}
+
 async function fetchCategories() {
   const res = await fetch(`${API_URL}/api/admin/product-categories`, {
-    headers: { Authorization: `Bearer ${auth.token}` }
+    credentials: 'include',
+    headers: { ...xsrfHeaders() }
   })
   categories.value = await res.json()
 }
@@ -182,7 +200,8 @@ async function fetchProducts() {
   const params = new URLSearchParams()
   if (filterCategory.value) params.append('category_id', filterCategory.value)
   const res = await fetch(`${API_URL}/api/admin/products?${params}`, {
-    headers: { Authorization: `Bearer ${auth.token}` }
+    credentials: 'include',
+    headers: { ...xsrfHeaders() }
   })
   products.value = await res.json()
 }
@@ -194,13 +213,19 @@ async function fetchAll() {
 
 async function submitCategory() {
   const payload = { ...catForm.value }
-  const res = await fetch(`${API_URL}/api/admin/product-categories`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+  const url = editingCategoryId.value
+    ? `${API_URL}/api/admin/product-categories/${editingCategoryId.value}`
+    : `${API_URL}/api/admin/product-categories`
+  const method = editingCategoryId.value ? 'PUT' : 'POST'
+  const res = await fetch(url, {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...xsrfHeaders() },
     body: JSON.stringify(payload)
   })
   if (res.ok) {
     showCatForm.value = false
+    editingCategoryId.value = null
     catForm.value = { name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 }
     fetchCategories()
   } else {
@@ -210,32 +235,16 @@ async function submitCategory() {
 
 function editCategory(c) {
   showCatForm.value = true
+  editingCategoryId.value = c.id
   catForm.value = { name: c.name, slug: c.slug, description: c.description, image: c.image, is_active: c.is_active, sort_order: c.sort_order }
-  // update
-  submitCategoryUpdate(c.id)
-}
-
-async function submitCategoryUpdate(id) {
-  const payload = { ...catForm.value }
-  const res = await fetch(`${API_URL}/api/admin/product-categories/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-    body: JSON.stringify(payload)
-  })
-  if (res.ok) {
-    showCatForm.value = false
-    catForm.value = { name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 }
-    fetchCategories()
-  } else {
-    alert('Gagal update kategori')
-  }
 }
 
 async function deleteCategory(c) {
   if (!confirm(`Hapus kategori ${c.name}?`)) return
   const res = await fetch(`${API_URL}/api/admin/product-categories/${c.id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${auth.token}` }
+    credentials: 'include',
+    headers: { ...xsrfHeaders() }
   })
   if (res.ok) {
     fetchAll()
@@ -261,7 +270,8 @@ async function submitProduct() {
   const payload = normalizeProductPayload(prodForm.value)
   const res = await fetch(`${API_URL}/api/admin/products`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...xsrfHeaders() },
     body: JSON.stringify(payload)
   })
   if (res.ok) {
@@ -286,7 +296,8 @@ async function submitEditProduct() {
   const payload = normalizeProductPayload(p)
   const res = await fetch(`${API_URL}/api/admin/products/${p.id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...xsrfHeaders() },
     body: JSON.stringify(payload)
   })
   if (res.ok) {
@@ -301,7 +312,8 @@ async function deleteProduct(p) {
   if (!confirm(`Hapus produk ${p.name}?`)) return
   const res = await fetch(`${API_URL}/api/admin/products/${p.id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${auth.token}` }
+    credentials: 'include',
+    headers: { ...xsrfHeaders() }
   })
   if (res.ok) {
     fetchProducts()

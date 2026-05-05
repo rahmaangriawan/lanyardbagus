@@ -129,6 +129,18 @@ import { useAuthStore } from '../stores/auth'
 const auth = useAuthStore()
 const API_URL = 'https://lanyardbagus.com'
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+  return null
+}
+
+function xsrfHeaders() {
+  const token = getCookie('XSRF-TOKEN')
+  return token ? { 'X-XSRF-TOKEN': decodeURIComponent(token), 'X-Requested-With': 'XMLHttpRequest' } : { 'X-Requested-With': 'XMLHttpRequest' }
+}
+
 const orders = ref([])
 const stats = ref({})
 const loading = ref(true)
@@ -154,7 +166,8 @@ async function fetchOrders() {
     if (search.value) params.append('search', search.value)
 
     const res = await fetch(`${API_URL}/api/admin/orders?${params}`, {
-      headers: { Authorization: `Bearer ${auth.token}` }
+      credentials: 'include',
+      headers: { ...xsrfHeaders() }
     })
     const data = await res.json()
     orders.value = data.data || []
@@ -168,7 +181,8 @@ async function fetchOrders() {
 async function fetchStats() {
   try {
     const res = await fetch(`${API_URL}/api/admin/orders/stats`, {
-      headers: { Authorization: `Bearer ${auth.token}` }
+      credentials: 'include',
+      headers: { ...xsrfHeaders() }
     })
     stats.value = await res.json()
   } catch (e) {
@@ -180,9 +194,10 @@ async function updateStatus(orderId, newStatus) {
   try {
     await fetch(`${API_URL}/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${auth.token}`
+        ...xsrfHeaders()
       },
       body: JSON.stringify({ status: newStatus })
     })
