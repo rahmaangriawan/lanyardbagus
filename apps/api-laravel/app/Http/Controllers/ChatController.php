@@ -93,11 +93,13 @@ class ChatController extends Controller
                 \Log::warning('AI chat provider request failed', [
                     'provider' => $provider,
                     'model' => $model,
+                    'has_api_key' => !empty($apiKey),
                     'error' => $response['error'] ?? null,
                 ]);
 
                 return response()->json([
-                    'message' => $this->fallbackReply($validated['message'])
+                    'message' => 'Maaf, terjadi kesalahan: ' . ($response['error'] ?? 'Unknown error'),
+                    'debug' => config('app.env') === 'local' ? $response['error'] : null,
                 ]);
             }
 
