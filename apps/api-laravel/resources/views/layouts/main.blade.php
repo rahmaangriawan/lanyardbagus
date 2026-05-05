@@ -798,9 +798,11 @@
                 if (userInfo) {
                     userFormContainer.style.display = 'none';
                     messagesContainer.style.display = 'flex';
+                    messagesContainer.style.flexDirection = 'column';
                     loadChatHistory();
                 } else {
                     userFormContainer.style.display = 'flex';
+                    userFormContainer.style.flexDirection = 'column';
                     messagesContainer.style.display = 'none';
                 }
             }
