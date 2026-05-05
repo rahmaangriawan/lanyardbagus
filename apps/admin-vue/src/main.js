@@ -34,7 +34,7 @@ axios.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const auth = useAuthStore()
       auth.logout()
-      router.push('/login')
+      window.location.href = '/dashboard/login'
     }
     return Promise.reject(error)
   }

@@ -258,7 +258,7 @@ function toggleSubmenu(key) {
 
 function logout() {
   auth.logout()
-  router.push('/login')
+  window.location.href = '/dashboard/login'
 }
 
 function toggleSidebar() {
@@ -316,10 +316,10 @@ onMounted(() => {
               class="w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
-              <router-link :to="item.path" class="flex items-center gap-2.5">
+              <a :href="'/dashboard' + item.path" class="flex items-center gap-2.5">
                 <component :is="item.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ item.label }}</span>
-              </router-link>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>
@@ -329,7 +329,7 @@ onMounted(() => {
           <SidebarMenuItem>
             <SidebarMenuButton 
               :isActive="isMenuActive(postinganMenu.children)"
-              @click="collapsed ? $router.push('/posts') : toggleSubmenu('postingan')"
+              @click="collapsed ? window.location.href = '/dashboard/posts' : toggleSubmenu('postingan')"
               class="cursor-pointer w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
@@ -352,10 +352,10 @@ onMounted(() => {
                   asChild
                   class="py-1.5 w-full"
                 >
-                  <router-link :to="child.path" class="flex items-center gap-2.5">
+                  <a :href="'/dashboard' + child.path" class="flex items-center gap-2.5">
                     <component :is="child.icon" class="w-[16px] h-[16px] flex-shrink-0 opacity-70" />
                     <span class="text-[12px] text-muted-foreground">{{ child.label }}</span>
-                  </router-link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </div>
@@ -371,10 +371,10 @@ onMounted(() => {
               class="w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
-              <router-link :to="item.path" class="flex items-center gap-2.5">
+              <a :href="'/dashboard' + item.path" class="flex items-center gap-2.5">
                 <component :is="item.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ item.label }}</span>
-              </router-link>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>
@@ -384,7 +384,7 @@ onMounted(() => {
           <SidebarMenuItem>
             <SidebarMenuButton 
               :isActive="isMenuActive(katalogMenu.children)"
-              @click="collapsed ? $router.push('/catalog/products') : toggleSubmenu('katalog')"
+              @click="collapsed ? window.location.href = '/dashboard/catalog/products' : toggleSubmenu('katalog')"
               class="cursor-pointer w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
@@ -407,10 +407,10 @@ onMounted(() => {
                   asChild
                   class="py-1.5 w-full"
                 >
-                  <router-link :to="child.path" class="flex items-center gap-2.5">
+                  <a :href="'/dashboard' + child.path" class="flex items-center gap-2.5">
                     <component :is="child.icon" class="w-[16px] h-[16px] flex-shrink-0 opacity-70" />
                     <span class="text-[12px] text-muted-foreground">{{ child.label }}</span>
-                  </router-link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </div>
@@ -445,10 +445,10 @@ onMounted(() => {
                   asChild
                   class="py-1.5 w-full"
                 >
-                  <router-link :to="child.path" class="flex items-center gap-2.5">
+                  <a :href="'/dashboard' + child.path" class="flex items-center gap-2.5">
                     <component :is="child.icon" class="w-[16px] h-[16px] flex-shrink-0 opacity-70" />
                     <span class="text-[12px] text-muted-foreground">{{ child.label }}</span>
-                  </router-link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </div>
@@ -464,10 +464,10 @@ onMounted(() => {
               class="w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
-              <router-link :to="leadsMenu.path" class="flex items-center gap-2.5">
+              <a :href="'/dashboard' + leadsMenu.path" class="flex items-center gap-2.5">
                 <component :is="leadsMenu.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ leadsMenu.label }}</span>
-              </router-link>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>
@@ -481,10 +481,10 @@ onMounted(() => {
               class="w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
-              <router-link :to="ordersMenu.path" class="flex items-center gap-2.5">
+              <a :href="'/dashboard' + ordersMenu.path" class="flex items-center gap-2.5">
                 <component :is="ordersMenu.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ ordersMenu.label }}</span>
-              </router-link>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>
@@ -504,10 +504,10 @@ onMounted(() => {
               class="w-full"
               :class="collapsed ? 'justify-center' : ''"
             >
-              <router-link :to="item.path" class="flex items-center gap-2.5">
+              <a :href="'/dashboard' + item.path" class="flex items-center gap-2.5">
                 <component :is="item.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ item.label }}</span>
-              </router-link>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>
@@ -545,14 +545,14 @@ onMounted(() => {
             <Globe class="w-4 h-4" />
             <span>Lihat Website</span>
           </a>
-          <router-link to="/profile" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <a href="/dashboard/profile" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <span class="text-sm text-muted-foreground">
             Hi, <span class="font-medium text-foreground">{{ user?.name || 'admin' }}</span>
           </span>
           <div class="w-8 h-8 border border-border rounded-full flex items-center justify-center">
             <User class="w-4 h-4 text-muted-foreground" />
           </div>
-        </router-link>
+        </a>
         </div>
       </header>
       

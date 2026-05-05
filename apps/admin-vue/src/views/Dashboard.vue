@@ -97,10 +97,10 @@ function getStatusBadgeClass(status) {
       <div class="md:col-span-2 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-card-foreground">Posts Terbaru</h3>
-          <router-link to="/posts" class="text-sm text-primary hover:underline flex items-center gap-1">
+          <a href="/dashboard/posts" class="text-sm text-primary hover:underline flex items-center gap-1">
             Lihat Semua
             <ArrowRight class="w-4 h-4" />
-          </router-link>
+          </a>
         </div>
         
         <Card>
@@ -131,10 +131,10 @@ function getStatusBadgeClass(status) {
       <div class="space-y-4">
         <h3 class="font-semibold text-card-foreground">Aksi Cepat</h3>
         <Card class="p-4 space-y-2">
-          <router-link 
+          <a 
             v-for="action in quickActions" 
             :key="action.to"
-            :to="action.to"
+            :href="'/dashboard' + action.to"
           >
             <Button 
               :variant="action.variant" 
@@ -143,7 +143,7 @@ function getStatusBadgeClass(status) {
               <component :is="action.icon" class="w-4 h-4 mr-2" />
               {{ action.label }}
             </Button>
-          </router-link>
+          </a>
         </Card>
       </div>
     </div>

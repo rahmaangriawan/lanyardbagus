@@ -49,12 +49,12 @@ function getStatusBadgeClass(status) {
 }
 
 function goToEdit(page) {
-  router.push(`/pages/edit/${page.id}`)
+  window.location.href = `/dashboard/pages/edit/${page.id}`
 }
 
 function goToView(page, event) {
   if (event) event.stopPropagation()
-  router.push(`/pages/view/${page.id}`)
+  window.location.href = `/dashboard/pages/edit/${page.id}`
 }
 
 async function deletePage(id, event) {
@@ -94,12 +94,12 @@ async function deletePage(id, event) {
           <ChevronDown class="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
         </div>
         
-        <router-link to="/pages/new">
+        <a href="/dashboard/pages/new">
           <Button>
             <Plus class="w-4 h-4 mr-2" />
             Halaman Baru
           </Button>
-        </router-link>
+        </a>
       </div>
     </div>
 
@@ -126,7 +126,7 @@ async function deletePage(id, event) {
             class="hover:bg-muted/50 transition-colors group"
           >
             <td class="px-0 py-0 font-medium">
-              <router-link :to="`/pages/edit/${page.id}`" class="flex items-center gap-3 px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/pages/edit/${page.id}`" class="flex items-center gap-3 px-6 py-4 w-full h-full">
                 <div v-if="page.featured_image" class="w-10 h-10 rounded border bg-muted flex-shrink-0 overflow-hidden">
                   <img :src="page.featured_image.url" class="w-full h-full object-cover" />
                 </div>
@@ -134,19 +134,19 @@ async function deletePage(id, event) {
                   <ImageIcon class="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span>{{ page.title }}</span>
-              </router-link>
+              </a>
             </td>
             <td class="px-0 py-0 text-muted-foreground font-mono text-sm">
-              <router-link :to="`/pages/edit/${page.id}`" class="block px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/pages/edit/${page.id}`" class="block px-6 py-4 w-full h-full">
                 /{{ page.slug }}
-              </router-link>
+              </a>
             </td>
             <td class="px-0 py-0">
-              <router-link :to="`/pages/edit/${page.id}`" class="block px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/pages/edit/${page.id}`" class="block px-6 py-4 w-full h-full">
                 <span :class="['px-2 py-1 text-xs rounded-full font-medium', getStatusBadgeClass(page.status)]">
                   {{ page.status }}
                 </span>
-              </router-link>
+              </a>
             </td>
             <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
               <Button variant="ghost" size="sm" @click.stop="goToView(page, $event)">

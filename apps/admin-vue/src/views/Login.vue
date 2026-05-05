@@ -16,7 +16,7 @@ async function handleLogin() {
   try {
     const success = await auth.login(email.value, password.value)
     if (success) {
-      router.push('/')
+      window.location.href = '/dashboard/'
     }
   } catch (err) {
     console.error('Login error:', err)

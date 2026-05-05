@@ -88,12 +88,12 @@ function getStatusBadgeClass(status) {
 }
 
 function goToEdit(post) {
-  router.push(`/posts/edit/${post.id}`)
+  window.location.href = `/dashboard/posts/edit/${post.id}`
 }
 
 function goToView(post, event) {
   if (event) event.stopPropagation()
-  router.push(`/posts/view/${post.id}`)
+  window.location.href = `/dashboard/posts/edit/${post.id}`
 }
 
 async function deletePost(id, event) {
@@ -136,12 +136,12 @@ async function deletePost(id, event) {
           <ChevronDown class="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
         </div>
         
-        <router-link to="/posts/new">
+        <a href="/dashboard/posts/new">
           <Button>
             <Plus class="w-4 h-4 mr-2" />
             Post Baru
           </Button>
-        </router-link>
+        </a>
       </div>
     </div>
 
@@ -168,7 +168,7 @@ async function deletePost(id, event) {
             class="hover:bg-muted/50 transition-colors group"
           >
             <td class="px-0 py-0">
-              <router-link :to="`/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
                 <div class="font-medium">{{ post.title }}</div>
                 <div class="flex items-center gap-1.5 mt-1">
                   <a
@@ -190,19 +190,19 @@ async function deletePost(id, event) {
                     <Copy v-else class="w-3 h-3 text-muted-foreground" />
                   </button>
                 </div>
-              </router-link>
+              </a>
             </td>
             <td class="px-0 py-0 text-muted-foreground">
-              <router-link :to="`/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
                 {{ post.category?.name || '-' }}
-              </router-link>
+              </a>
             </td>
             <td class="px-0 py-0">
-              <router-link :to="`/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
+              <a :href="`/dashboard/posts/edit/${post.id}`" class="block px-6 py-4 w-full h-full">
                 <span :class="['px-2 py-1 text-xs rounded-full font-medium', getStatusBadgeClass(post.status)]">
                   {{ post.status }}
                 </span>
-              </router-link>
+              </a>
             </td>
             <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
               <Button variant="ghost" size="sm" @click.stop="goToView(post, $event)">
