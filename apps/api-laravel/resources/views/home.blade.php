@@ -1708,6 +1708,10 @@
                     userFormContainer.style.flexDirection = 'column';
                     messagesContainer.style.display = 'none';
                 }
+                // Re-init lucide icons after view change
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             }
 
             function toggleChat() {
