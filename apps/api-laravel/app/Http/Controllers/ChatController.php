@@ -57,7 +57,7 @@ class ChatController extends Controller
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
             $enabled = Setting::get('ai_enabled', 'true');
 
-            if ($enabled === 'false' || ! $apiKey) {
+            if ($enabled === 'false' || ($provider !== 'free' && ! $apiKey)) {
                 return response()->json([
                     'message' => 'Maaf, layanan chat AI sedang tidak tersedia. Silakan hubungi kami via WhatsApp.'
                 ], 503);
@@ -198,8 +198,8 @@ class ChatController extends Controller
     {
         $settings = [
             'enabled' => Setting::get('ai_enabled', 'true') === 'true',
-            'provider' => Setting::get('ai_provider', 'openai'),
-            'model' => Setting::get('ai_model', 'gpt-4o-mini'),
+            'provider' => Setting::get('ai_provider', 'free'),
+            'model' => Setting::get('ai_model', 'free-agent'),
             'api_key' => '',
             'has_api_key' => (bool) Setting::get('ai_api_key'),
             'system_prompt' => Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt()),
@@ -217,7 +217,7 @@ class ChatController extends Controller
     {
         $validated = $request->validate([
             'enabled' => ['required', 'boolean'],
-            'provider' => ['required', 'string', 'in:openai,anthropic,google'],
+            'provider' => ['required', 'string', 'in:free'],
             'model' => ['required', 'string'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['required', 'string', 'max:5000'],
@@ -226,8 +226,8 @@ class ChatController extends Controller
         ]);
 
         Setting::set('ai_enabled', $validated['enabled'] ? 'true' : 'false', 'ai');
-        Setting::set('ai_provider', $validated['provider'], 'ai');
-        Setting::set('ai_model', $validated['model'], 'ai');
+        Setting::set('ai_provider', $validated['provider'] === 'free' ? 'free' : $validated['provider'], 'ai');
+        Setting::set('ai_model', $validated['provider'] === 'free' ? 'free-agent' : $validated['model'], 'ai');
         if ($validated['api_key'] && $validated['api_key'] !== '***') {
             Setting::set('ai_api_key', $validated['api_key'], 'ai');
         }
@@ -244,7 +244,7 @@ class ChatController extends Controller
     public function testProvider(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'provider' => ['nullable', 'string', 'in:openai,anthropic,google'],
+            'provider' => ['nullable', 'string', 'in:free'],
             'model' => ['nullable', 'string'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['nullable', 'string', 'max:5000'],
@@ -252,13 +252,13 @@ class ChatController extends Controller
         ]);
 
         $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key')));
-        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'openai');
+        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'free');
         $provider = $this->resolveProvider($storedProvider, $apiKey);
         $model = $this->resolveModel($provider, $validated['model'] ?? Setting::get('ai_model'));
         $systemPrompt = $validated['system_prompt'] ?? Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
         $testMessage = $validated['message'] ?? 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.';
 
-        if (! $apiKey) {
+        if ($provider !== 'free' && ! $apiKey) {
             return response()->json([
                 'success' => false,
                 'provider' => $provider,
@@ -298,6 +298,8 @@ class ChatController extends Controller
     {
         try {
             switch ($provider) {
+                case 'free':
+                    return $this->callFreeAgent($messages);
                 case 'anthropic':
                     return $this->callAnthropic($apiKey, $model, $messages);
                 case 'google':
@@ -487,19 +489,7 @@ class ChatController extends Controller
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
     {
-        $apiKey = trim((string) $apiKey);
-
-        if (str_starts_with($apiKey, 'AIza')) {
-            return 'google';
-        }
-
-        if (str_starts_with($apiKey, 'sk-') || str_starts_with($apiKey, 'gsk-')) {
-            return 'openai';
-        }
-
-        return in_array($storedProvider, ['openai', 'anthropic', 'google'], true)
-            ? $storedProvider
-            : 'openai';
+        return 'free';
     }
 
     private function resolveModel(string $provider, ?string $storedModel): string
@@ -507,6 +497,7 @@ class ChatController extends Controller
         $storedModel = trim((string) $storedModel);
 
         return match ($provider) {
+            'free' => 'free-agent',
             'google' => str_starts_with($storedModel, 'gemini-2.0-flash') ? 'gemini-2.0-flash' : 'gemini-2.0-flash',
             'anthropic' => str_starts_with($storedModel, 'claude-') ? $storedModel : 'claude-3-5-sonnet-latest',
             default => $storedModel !== '' ? $storedModel : 'gpt-4o-mini',
@@ -545,6 +536,78 @@ class ChatController extends Controller
         }
 
         return 'Siap, ceritakan kebutuhan lanyard Anda: jumlah pcs, ukuran, dan model yang diinginkan. Saya bantu arahkan ke opsi yang paling cocok.';
+    }
+
+    private function callFreeAgent(array $messages): array
+    {
+        $systemPrompt = $this->extractSystemPrompt($messages);
+        $userMessage = '';
+
+        foreach (array_reverse($messages) as $message) {
+            if (($message['role'] ?? null) === 'user') {
+                $userMessage = (string) ($message['content'] ?? '');
+                break;
+            }
+        }
+
+        $reply = $this->generateFreeReply($userMessage, $systemPrompt, $messages);
+
+        return [
+            'success' => true,
+            'content' => $reply,
+            'tokens' => null,
+            'model' => 'free-agent',
+        ];
+    }
+
+    private function generateFreeReply(string $message, string $systemPrompt, array $messages): string
+    {
+        $lowerMessage = mb_strtolower($message);
+        $contextSummary = $this->buildContextSummary($messages);
+
+        if (str_contains($lowerMessage, 'harga') || str_contains($lowerMessage, 'biaya') || str_contains($lowerMessage, 'price')) {
+            return 'Untuk harga lanyard custom, saya perlu jumlah pcs, ukuran, bahan, dan model. Dari situ saya bisa bantu arahkan estimasi yang paling masuk akal.';
+        }
+
+        if (str_contains($lowerMessage, 'logo') || str_contains($lowerMessage, 'desain')) {
+            return 'Bisa, kirim logo atau desain yang Anda punya. Saya bantu cek agar hasilnya cocok untuk lanyard dan tetap rapi saat dicetak.';
+        }
+
+        if (str_contains($lowerMessage, 'lama') || str_contains($lowerMessage, 'waktu') || str_contains($lowerMessage, 'produksi')) {
+            return 'Waktu produksi biasanya bergantung pada jumlah dan kompleksitas desain. Kirim detail kebutuhan supaya saya bantu estimasi yang lebih tepat.';
+        }
+
+        if (str_contains($lowerMessage, 'minimal') || str_contains($lowerMessage, 'pcs') || str_contains($lowerMessage, 'order')) {
+            return 'Minimal order tergantung model lanyard yang dipilih. Kirim kebutuhan Anda, nanti saya bantu arahkan ke opsi yang paling sesuai.';
+        }
+
+        if (str_contains($lowerMessage, 'whatsapp') || str_contains($lowerMessage, 'wa')) {
+            return 'Silakan lanjut ke WhatsApp untuk proses order dan cek detail final. Tim kami akan bantu dari pemilihan bahan sampai konfirmasi desain.';
+        }
+
+        if (str_contains($lowerMessage, 'bahan') || str_contains($lowerMessage, 'polyester') || str_contains($lowerMessage, 'nylon') || str_contains($lowerMessage, 'satin')) {
+            return 'Kami bisa bantu pilih bahan yang paling cocok, misalnya polyester, nylon, atau satin. Setiap bahan punya karakter berbeda untuk tampilan, feel, dan ketahanan.';
+        }
+
+        $summary = $contextSummary !== '' ? ' Konteks terakhir: ' . $contextSummary : '';
+
+        return 'Siap, saya bantu. Tolong kirim jumlah pcs, ukuran, bahan, dan model yang diinginkan supaya saya bisa arahkan opsi terbaik.' . $summary;
+    }
+
+    private function buildContextSummary(array $messages): string
+    {
+        $recent = array_slice($messages, -4);
+        $parts = [];
+
+        foreach ($recent as $message) {
+            $role = ($message['role'] ?? 'user') === 'assistant' ? 'AI' : 'User';
+            $content = trim((string) ($message['content'] ?? ''));
+            if ($content !== '') {
+                $parts[] = $role . ': ' . mb_substr($content, 0, 40);
+            }
+        }
+
+        return implode(' | ', $parts);
     }
 
     private function getDefaultSystemPrompt(): string

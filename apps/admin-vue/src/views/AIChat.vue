@@ -25,8 +25,8 @@ const testResult = ref('')
 // AI Settings
 const aiSettings = ref({
   enabled: true,
-  provider: 'openai',
-  model: 'gpt-4o-mini',
+  provider: 'free',
+  model: 'free-agent',
   api_key: '',
   system_prompt: '',
   welcome_message: '',
@@ -45,18 +45,8 @@ const trainingData = ref([])
 
 // Provider models
 const providerModels = {
-  openai: [
-    { value: 'gpt-4o', label: 'GPT-4o (Terbaik)' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Hemat)' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Paling Hemat)' }
-  ],
-  anthropic: [
-    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet (Terbaik)' },
-    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Hemat)' }
-  ],
-  google: [
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Recommended)' },
+  free: [
+    { value: 'free-agent', label: 'Free Local Agent' },
   ]
 }
 
@@ -82,12 +72,8 @@ async function loadAISettings() {
     aiSettings.value = { ...aiSettings.value, ...res.data }
     apiKeySaved.value = !!res.data.has_api_key
     aiSettings.value.api_key = ''
-    if (String(res.data.model || '').startsWith('gemini-')) {
-      aiSettings.value.provider = 'google'
-      if (String(aiSettings.value.model || '') !== 'gemini-2.0-flash') {
-        aiSettings.value.model = 'gemini-2.0-flash'
-      }
-    }
+    aiSettings.value.provider = 'free'
+    aiSettings.value.model = 'free-agent'
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
   } catch (err) {
@@ -128,18 +114,12 @@ async function loadTrainingData() {
 async function saveSettings() {
   loading.value = true
   try {
-    const apiKey = (aiSettings.value.api_key || '').trim()
-    if (apiKey.startsWith('AIza')) {
-      aiSettings.value.provider = 'google'
-    }
-
-    if (aiSettings.value.provider === 'google') {
-      aiSettings.value.model = 'gemini-2.0-flash'
-    }
+    aiSettings.value.provider = 'free'
+    aiSettings.value.model = 'free-agent'
+    aiSettings.value.api_key = ''
 
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
-    apiKeySaved.value = apiKeySaved.value || !!aiSettings.value.api_key
-    aiSettings.value.api_key = ''
+    apiKeySaved.value = false
     saved.value = true
     setTimeout(() => saved.value = false, 3000)
   } catch (err) {
@@ -155,9 +135,9 @@ async function testProvider() {
 
   try {
     const payload = {
-      provider: aiSettings.value.provider,
-      model: aiSettings.value.model,
-      api_key: (aiSettings.value.api_key || '').trim() || undefined,
+      provider: 'free',
+      model: 'free-agent',
+      api_key: undefined,
       system_prompt: aiSettings.value.system_prompt,
       message: 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.'
     }
@@ -281,9 +261,7 @@ onMounted(() => {
                 v-model="aiSettings.provider"
                 class="w-full h-10 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic (Claude)</option>
-                <option value="google">Google (Gemini)</option>
+                <option value="free">Free Local Agent</option>
               </select>
             </div>
 
