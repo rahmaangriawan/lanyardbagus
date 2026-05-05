@@ -1,5 +1,16 @@
 <template>
   <div class="space-y-8">
+    <!-- Toasts -->
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      <div v-for="t in toasts" :key="t.id" class="min-w-[260px] px-4 py-3 rounded-lg border shadow-sm text-sm"
+           :class="{
+             'bg-green-50 border-green-200 text-green-800': t.type==='success',
+             'bg-red-50 border-red-200 text-red-800': t.type==='error',
+             'bg-blue-50 border-blue-200 text-blue-800': t.type==='info',
+           }">
+        {{ t.message }}
+      </div>
+    </div>
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold">Katalog Produk</h1>
@@ -18,7 +29,7 @@
       </div>
 
       <div v-if="showCatForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <input v-model="catForm.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama kategori (mis. Lanyard)">
+        <input v-model="catForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': catErrors.name }" placeholder="Nama kategori (mis. Lanyard)">
         <input v-model="catForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (mis. lanyard)">
         <input v-model="catForm.image" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="URL gambar (opsional)">
         <input v-model="catForm.description" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" placeholder="Deskripsi (opsional)">
@@ -73,17 +84,17 @@
       </div>
 
       <div v-if="showProdForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <select v-model="prodForm.category_id" class="border rounded-lg px-3 py-2 text-sm">
+        <select v-model="prodForm.category_id" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.category_id }">
           <option :value="null" disabled>Pilih kategori</option>
           <option v-for="c in categories" :value="c.id" :key="c.id">{{ c.name }}</option>
         </select>
-        <input v-model="prodForm.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama produk">
+        <input v-model="prodForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.name }" placeholder="Nama produk">
         <input v-model="prodForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (opsional)">
-        <input v-model.number="prodForm.price" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Harga per pcs">
-        <input v-model.number="prodForm.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Min order (default 50)">
+        <input v-model.number="prodForm.price" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.price }" placeholder="Harga per pcs">
+        <input v-model.number="prodForm.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.min_order }" placeholder="Min order (default 50)">
         <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="prodForm.is_active"> Aktif</label>
         <input v-model="prodForm.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="Gambar (URL dipisah koma)">
-        <input v-model="prodForm.specsJson" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" placeholder='Spesifikasi (JSON), contoh: {"Lebar":"2 cm","Cetak":"Sublim"}'>
+        <input v-model="prodForm.specsJson" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" :class="{ 'border-red-500': prodErrors.specsJson }" placeholder='Spesifikasi (JSON), contoh: {"Lebar":"2 cm","Cetak":"Sublim"}'>
         <div class="flex items-center gap-3 md:col-span-3">
           <input v-model.number="prodForm.sort_order" type="number" class="border rounded-lg px-3 py-2 text-sm w-32" placeholder="Urutan">
           <button @click="submitProduct" class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg">Simpan</button>
@@ -161,12 +172,15 @@ const products = ref([])
 const filterCategory = ref(null)
 const showCatForm = ref(false)
 const showProdForm = ref(false)
+const toasts = ref([])
 
 const catForm = ref({ name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 })
 const prodForm = ref({ category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', specsJson: '' })
 
 const editProd = ref(null)
 const editingCategoryId = ref(null)
+const catErrors = ref({})
+const prodErrors = ref({})
 
 const props = defineProps({
   section: { type: String, default: 'products' }
@@ -174,6 +188,14 @@ const props = defineProps({
 
 function formatRupiah(num) {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID')
+}
+
+function showToast(message, type = 'success') {
+  const id = Date.now() + Math.random()
+  toasts.value.push({ id, message, type })
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id)
+  }, 3000)
 }
 
 function getCookie(name) {
@@ -212,6 +234,13 @@ async function fetchAll() {
 }
 
 async function submitCategory() {
+  // Frontend validation
+  catErrors.value = {}
+  if (!catForm.value.name?.trim()) {
+    catErrors.value.name = 'required'
+    showToast('Nama kategori wajib diisi', 'error')
+    return
+  }
   const payload = { ...catForm.value }
   const url = editingCategoryId.value
     ? `${API_URL}/api/admin/product-categories/${editingCategoryId.value}`
@@ -228,8 +257,11 @@ async function submitCategory() {
     editingCategoryId.value = null
     catForm.value = { name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 }
     fetchCategories()
+    showToast('Kategori berhasil disimpan', 'success')
   } else {
-    alert('Gagal menyimpan kategori')
+    let msg = 'Gagal menyimpan kategori'
+    try { const j = await res.json(); msg = j.message || j.error || msg } catch(e) {}
+    showToast(msg, 'error')
   }
 }
 
@@ -248,8 +280,9 @@ async function deleteCategory(c) {
   })
   if (res.ok) {
     fetchAll()
+    showToast('Kategori dihapus', 'success')
   } else {
-    alert('Gagal hapus kategori')
+    showToast('Gagal hapus kategori', 'error')
   }
 }
 
@@ -267,6 +300,20 @@ function normalizeProductPayload(f) {
 }
 
 async function submitProduct() {
+  // Frontend validation
+  prodErrors.value = {}
+  if (!prodForm.value.category_id) { prodErrors.value.category_id = 'required' }
+  if (!prodForm.value.name?.trim()) { prodErrors.value.name = 'required' }
+  if (prodForm.value.price === null || prodForm.value.price === undefined || prodForm.value.price < 0) { prodErrors.value.price = 'invalid' }
+  if (!prodForm.value.min_order || prodForm.value.min_order < 1) { prodErrors.value.min_order = 'invalid' }
+  // Validate specs JSON if provided
+  if (prodForm.value.specsJson) {
+    try { JSON.parse(prodForm.value.specsJson) } catch(e) { prodErrors.value.specsJson = 'invalid' }
+  }
+  if (Object.keys(prodErrors.value).length) {
+    showToast('Periksa kembali input produk Anda', 'error')
+    return
+  }
   const payload = normalizeProductPayload(prodForm.value)
   const res = await fetch(`${API_URL}/api/admin/products`, {
     method: 'POST',
@@ -278,8 +325,11 @@ async function submitProduct() {
     showProdForm.value = false
     prodForm.value = { category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', specsJson: '' }
     fetchProducts()
+    showToast('Produk berhasil disimpan', 'success')
   } else {
-    alert('Gagal menyimpan produk')
+    let msg = 'Gagal menyimpan produk'
+    try { const j = await res.json(); msg = j.message || j.error || msg } catch(e) {}
+    showToast(msg, 'error')
   }
 }
 
@@ -303,8 +353,11 @@ async function submitEditProduct() {
   if (res.ok) {
     editProd.value = null
     fetchProducts()
+    showToast('Produk berhasil diperbarui', 'success')
   } else {
-    alert('Gagal update produk')
+    let msg = 'Gagal update produk'
+    try { const j = await res.json(); msg = j.message || j.error || msg } catch(e) {}
+    showToast(msg, 'error')
   }
 }
 
@@ -317,8 +370,9 @@ async function deleteProduct(p) {
   })
   if (res.ok) {
     fetchProducts()
+    showToast('Produk dihapus', 'success')
   } else {
-    alert('Gagal hapus produk')
+    showToast('Gagal hapus produk', 'error')
   }
 }
 

@@ -136,7 +136,9 @@ const pageTitles = {
   'Leads': 'Leads',
   'Users': 'Pengguna',
   'Settings': 'Pengaturan',
-  'AIChat': 'AI Chat Assistant'
+  'AIChat': 'AI Chat Assistant',
+  'CatalogProducts': 'Katalog - Produk',
+  'CatalogCategories': 'Katalog - Kategori Produk'
 }
 
 // Load settings and update title/favicon
