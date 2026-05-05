@@ -197,14 +197,29 @@ async function loadTags() {
   }
 }
 
+function formatDateTimeLocal(dateString) {
+  if (!dateString) return null
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return null
+  
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`
+}
+
 async function loadPost() {
   loading.value = true
   try {
-    const res = await axios.get(`${API_URL}/api/posts/${postId.value}`)
+    const res = await axios.get(`${API_URL}/api/admin/posts/${postId.value}`, { withCredentials: true })
     post.value = {
       ...res.data,
       // Convert featuredImage to featured_image for frontend
-      featured_image: res.data.featuredImage || null
+      featured_image: res.data.featuredImage || null,
+      published_at: formatDateTimeLocal(res.data.published_at)
     }
     post.value.tags_input = (res.data?.tags || []).map(tag => tag.name).join(', ')
   } catch (err) {

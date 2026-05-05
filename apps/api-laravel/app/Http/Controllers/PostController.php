@@ -65,7 +65,7 @@ class PostController extends Controller
 
         \Illuminate\Support\Facades\Cache::forget('posts_public_list');
 
-        return response()->json($post->load('tags:id,name,slug'), 201);
+        return response()->json($post->load('tags:id,name,slug', 'featuredImage:id,url,file_name'), 201);
     }
 
     public function show(Post $post): JsonResponse
@@ -108,7 +108,7 @@ class PostController extends Controller
         \Illuminate\Support\Facades\Cache::forget('posts_public_list');
         \Illuminate\Support\Facades\Cache::forget("post_show_{$post->slug}");
 
-        return response()->json($post->load('tags:id,name,slug'));
+        return response()->json($post->load('tags:id,name,slug', 'featuredImage:id,url,file_name'));
     }
 
     public function destroy(Post $post): JsonResponse

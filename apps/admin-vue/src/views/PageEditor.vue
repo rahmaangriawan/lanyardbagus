@@ -100,13 +100,28 @@ onMounted(async () => {
   }
 })
 
+function formatDateTimeLocal(dateString) {
+  if (!dateString) return null
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return null
+  
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`
+}
+
 async function loadPage() {
   loading.value = true
   try {
     const res = await axios.get(`${API_URL}/api/admin/pages/${pageId.value}`, { withCredentials: true })
     page.value = {
       ...res.data,
-      featured_image: res.data.featuredImage || null
+      featured_image: res.data.featuredImage || null,
+      published_at: formatDateTimeLocal(res.data.published_at)
     }
     // Handle is_published to status mapping if needed
     if (res.data.is_published !== undefined) {
