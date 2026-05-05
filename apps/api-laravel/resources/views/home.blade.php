@@ -1245,8 +1245,8 @@
     <style>
         #chat-widget-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             z-index: 9999;
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
@@ -1299,20 +1299,17 @@
             position: absolute;
             bottom: 70px;
             right: 0;
-            width: 360px;
-            max-width: calc(100vw - 40px);
-            height: 500px;
-            max-height: calc(100vh - 100px);
-            background: rgba(255,255,255,0.96);
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            border-radius: 24px;
-            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            height: 600px;
+            max-height: calc(100vh - 120px);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: slideUp 0.3s ease;
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
         }
 
         @keyframes slideUp {
