@@ -7,7 +7,6 @@ vendor/
 
 # Build artifacts
 dist/
-build/
 .svelte-kit/
 apps/api-laravel/public/dashboard/
 apps/api-laravel/public/storage
