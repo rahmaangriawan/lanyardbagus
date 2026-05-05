@@ -353,7 +353,7 @@ async function deleteRedirect(redirect) {
         <div class="space-y-2">
           <Label>Google Search Console</Label>
           <Input v-model="verification.google_search_console" placeholder="AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef" />
-          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa <meta ...>)</p>
+          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa &lt;meta ...&gt;)</p>
         </div>
 
         <div class="space-y-2">
@@ -370,7 +370,7 @@ async function deleteRedirect(redirect) {
         <div class="space-y-2">
           <Label>Bing Webmaster</Label>
           <Input v-model="verification.bing_webmaster" placeholder="AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef" />
-          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa <meta ...>)</p>
+          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa &lt;meta ...&gt;)</p>
         </div>
 
         <!-- Live preview of meta tags -->
