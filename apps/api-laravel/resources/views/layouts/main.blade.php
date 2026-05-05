@@ -107,91 +107,72 @@
                                 {{ $label }}
                                 <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </a>
-                            <div class="mega-dropdown hidden absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50">
-                                <div class="bg-white border border-gray-200 rounded-xl shadow-2xl p-0 w-[720px] overflow-hidden">
-                                    <div class="grid grid-cols-4 divide-x divide-gray-100">
-                                        <!-- Categories Column -->
-                                        <div class="col-span-1 bg-gray-50/50 p-5">
-                                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Kategori</h4>
-                                            <div class="flex flex-col gap-0.5">
-                                                <a href="/katalog/lanyard" class="group flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-                                                    <div class="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600">Lanyard Custom</span>
+                            <div class="mega-dropdown hidden absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50">
+                                <div class="bg-white border border-gray-200 rounded-xl shadow-2xl p-5 w-[560px]">
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <!-- Categories -->
+                                        <div>
+                                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Kategori</h4>
+                                            <div class="space-y-1">
+                                                <a href="/katalog/lanyard" class="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                                    Lanyard Custom
                                                 </a>
-                                                <a href="/katalog/wristband" class="group flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-                                                    <div class="w-8 h-8 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 group-hover:text-purple-600">Wristband</span>
+                                                <a href="/katalog/wristband" class="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
+                                                    Wristband
                                                 </a>
-                                                <a href="/katalog/keychain" class="group flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-                                                    <div class="w-8 h-8 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.562-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1.001.43-1.563A6 6 0 1121.75 8.25z"/></svg>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 group-hover:text-amber-600">Keychain</span>
+                                                <a href="/katalog/keychain" class="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.562-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1.001.43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                                    Keychain
                                                 </a>
-                                                <a href="/katalog/id-card" class="group flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-                                                    <div class="w-8 h-8 rounded-md bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 group-hover:text-green-600">ID Card</span>
+                                                <a href="/katalog/id-card" class="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                                    ID Card
                                                 </a>
-                                                <a href="/katalog/card-holder" class="group flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-                                                    <div class="w-8 h-8 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
-                                                    </div>
-                                                    <span class="text-sm font-medium text-gray-700 group-hover:text-rose-600">Card Holder</span>
-                                                </a>
-                                                <div class="h-px bg-gray-200 my-3"></div>
-                                                <a href="/katalog" class="flex items-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200 transition-all">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                                    <span class="text-sm font-semibold">Lihat Semua Produk</span>
+                                                <a href="/katalog/card-holder" class="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                                                    Card Holder
                                                 </a>
                                             </div>
                                         </div>
-                                        <!-- Featured Products Column -->
-                                        <div class="col-span-3 p-6">
-                                            <div class="flex items-center justify-between mb-5">
-                                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Produk Unggulan</h4>
-                                                <a href="/katalog" class="text-xs font-medium text-blue-600 hover:text-blue-700">Lihat semua →</a>
-                                            </div>
-                                            <div class="grid grid-cols-3 gap-4">
-                                                <a href="/order?product_id=1" class="group block">
-                                                    <div class="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl mb-3 flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                                                        <svg class="w-12 h-12 text-blue-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                        <!-- Featured -->
+                                        <div>
+                                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Unggulan</h4>
+                                            <div class="space-y-2">
+                                                <a href="/order?product_id=1" class="flex items-center gap-3 py-2 px-2 rounded hover:bg-gray-50 transition-colors">
+                                                    <div class="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-blue-600">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                                                     </div>
-                                                    <h5 class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Lanyard Custom</h5>
-                                                    <p class="text-xs text-gray-500 mt-1">Mulai Rp 10.000/pcs</p>
-                                                </a>
-                                                <a href="/order?product_id=2" class="group block">
-                                                    <div class="aspect-square bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl mb-3 flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                                                        <svg class="w-12 h-12 text-purple-400 group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
-                                                    </div>
-                                                    <h5 class="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">Wristband</h5>
-                                                    <p class="text-xs text-gray-500 mt-1">Mulai Rp 8.000/pcs</p>
-                                                </a>
-                                                <a href="/order?product_id=4" class="group block">
-                                                    <div class="aspect-square bg-gradient-to-br from-green-50 to-green-100 rounded-xl mb-3 flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                                                        <svg class="w-12 h-12 text-green-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-                                                    </div>
-                                                    <h5 class="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">ID Card PVC</h5>
-                                                    <p class="text-xs text-gray-500 mt-1">Mulai Rp 15.000/pcs</p>
-                                                </a>
-                                            </div>
-                                            <!-- Banner -->
-                                            <div class="mt-5 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-4 text-white">
-                                                <div class="flex items-center justify-between">
                                                     <div>
-                                                        <p class="text-sm font-semibold">Pesan Sekarang</p>
-                                                        <p class="text-xs text-gray-300 mt-0.5">Dapatkan harga spesial untuk pesanan bulk</p>
+                                                        <p class="text-sm font-medium text-gray-900">Lanyard Custom</p>
+                                                        <p class="text-xs text-gray-500">Rp 10.000/pcs</p>
                                                     </div>
-                                                    <a href="/order" class="inline-flex items-center gap-1 px-4 py-2 bg-white text-gray-900 text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                                                        Order
-                                                    </a>
-                                                </div>
+                                                </a>
+                                                <a href="/order?product_id=2" class="flex items-center gap-3 py-2 px-2 rounded hover:bg-gray-50 transition-colors">
+                                                    <div class="w-10 h-10 rounded bg-purple-50 flex items-center justify-center text-purple-600">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">Wristband</p>
+                                                        <p class="text-xs text-gray-500">Rp 8.000/pcs</p>
+                                                    </div>
+                                                </a>
+                                                <a href="/order?product_id=4" class="flex items-center gap-3 py-2 px-2 rounded hover:bg-gray-50 transition-colors">
+                                                    <div class="w-10 h-10 rounded bg-green-50 flex items-center justify-center text-green-600">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900">ID Card PVC</p>
+                                                        <p class="text-xs text-gray-500">Rp 15.000/pcs</p>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                                <a href="/katalog" class="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                                    Lihat semua produk
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
