@@ -1,5 +1,16 @@
 <template>
   <div class="space-y-6">
+    <!-- Toasts -->
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      <div v-for="t in toasts" :key="t.id" class="min-w-[260px] px-4 py-3 rounded-lg border shadow-sm text-sm"
+           :class="{
+             'bg-green-50 border-green-200 text-green-800': t.type==='success',
+             'bg-red-50 border-red-200 text-red-800': t.type==='error',
+             'bg-blue-50 border-blue-200 text-blue-800': t.type==='info',
+           }">
+        {{ t.message }}
+      </div>
+    </div>
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
@@ -141,6 +152,13 @@ function xsrfHeaders() {
   return token ? { 'X-XSRF-TOKEN': decodeURIComponent(token), 'X-Requested-With': 'XMLHttpRequest' } : { 'X-Requested-With': 'XMLHttpRequest' }
 }
 
+const toasts = ref([])
+function showToast(message, type = 'success') {
+  const id = Date.now() + Math.random()
+  toasts.value.push({ id, message, type })
+  setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3000)
+}
+
 const orders = ref([])
 const stats = ref({})
 const loading = ref(true)
@@ -192,7 +210,7 @@ async function fetchStats() {
 
 async function updateStatus(orderId, newStatus) {
   try {
-    await fetch(`${API_URL}/api/admin/orders/${orderId}/status`, {
+    const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       credentials: 'include',
       headers: {
@@ -201,10 +219,18 @@ async function updateStatus(orderId, newStatus) {
       },
       body: JSON.stringify({ status: newStatus })
     })
-    fetchOrders()
-    fetchStats()
+    if (res.ok) {
+      showToast('Status order berhasil diperbarui', 'success')
+      fetchOrders()
+      fetchStats()
+    } else {
+      let msg = 'Gagal memperbarui status'
+      try { const j = await res.json(); msg = j.message || j.error || msg } catch(e) {}
+      showToast(msg, 'error')
+    }
   } catch (e) {
     console.error('Failed to update status', e)
+    showToast('Terjadi kesalahan jaringan', 'error')
   }
 }
 

@@ -9,6 +9,12 @@
              'bg-blue-50 border-blue-200 text-blue-800': t.type==='info',
            }">
         {{ t.message }}
+
+function firstImageUrl(imagesCsv) {
+  if (!imagesCsv) return ''
+  const first = imagesCsv.split(',').map(s => s.trim()).filter(Boolean)[0]
+  return first || ''
+}
       </div>
     </div>
     <div class="flex items-center justify-between">
@@ -94,6 +100,10 @@
         <input v-model.number="prodForm.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.min_order }" placeholder="Min order (default 50)">
         <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="prodForm.is_active"> Aktif</label>
         <input v-model="prodForm.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="Gambar (URL dipisah koma)">
+        <div v-if="firstImageUrl(prodForm.imagesCsv)" class="md:col-span-1 flex items-center gap-2">
+          <img :src="firstImageUrl(prodForm.imagesCsv)" alt="Preview" class="w-16 h-16 object-cover rounded border" />
+          <span class="text-xs text-muted-foreground">Preview</span>
+        </div>
         <input v-model="prodForm.specsJson" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" :class="{ 'border-red-500': prodErrors.specsJson }" placeholder='Spesifikasi (JSON), contoh: {"Lebar":"2 cm","Cetak":"Sublim"}'>
         <div class="flex items-center gap-3 md:col-span-3">
           <input v-model.number="prodForm.sort_order" type="number" class="border rounded-lg px-3 py-2 text-sm w-32" placeholder="Urutan">
@@ -105,6 +115,7 @@
         <table class="w-full text-sm">
           <thead class="bg-muted/50 border-b">
             <tr>
+              <th class="text-left p-3">Gambar</th>
               <th class="text-left p-3">Produk</th>
               <th class="text-left p-3">Kategori</th>
               <th class="text-right p-3">Harga</th>
@@ -116,6 +127,9 @@
           </thead>
           <tbody>
             <tr v-for="p in products" :key="p.id" class="border-b">
+              <td class="p-3">
+                <img v-if="Array.isArray(p.images) && p.images.length" :src="p.images[0]" class="w-12 h-12 object-cover rounded border" />
+              </td>
               <td class="p-3 font-medium">{{ p.name }}</td>
               <td class="p-3">{{ p.category?.name }}</td>
               <td class="p-3 text-right">{{ formatRupiah(p.price) }}</td>
@@ -124,6 +138,7 @@
               <td class="p-3 text-right">{{ p.sort_order }}</td>
               <td class="p-3 text-center space-x-2">
                 <button class="px-2 py-1 text-xs border rounded" @click="startEditProduct(p)">Edit</button>
+                <button class="px-2 py-1 text-xs border rounded" @click="copyOrderLink(p)">Copy Order Link</button>
                 <button class="px-2 py-1 text-xs border rounded text-red-600" @click="deleteProduct(p)">Hapus</button>
               </td>
             </tr>
@@ -373,6 +388,16 @@ async function deleteProduct(p) {
     showToast('Produk dihapus', 'success')
   } else {
     showToast('Gagal hapus produk', 'error')
+  }
+}
+
+async function copyOrderLink(p) {
+  const url = `${API_URL}/order?product_id=${p.id}`
+  try {
+    await navigator.clipboard.writeText(url)
+    showToast('Link order disalin', 'success')
+  } catch (e) {
+    showToast('Gagal menyalin link', 'error')
   }
 }
 
