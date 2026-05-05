@@ -58,8 +58,6 @@ const providerModels = {
   google: [
     { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Recommended)' },
     { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite (Hemat)' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Hemat)' }
   ]
 }
 
@@ -87,7 +85,7 @@ async function loadAISettings() {
     aiSettings.value.api_key = ''
     if (String(res.data.model || '').startsWith('gemini-')) {
       aiSettings.value.provider = 'google'
-      if (!String(aiSettings.value.model || '').startsWith('gemini-')) {
+      if (!String(aiSettings.value.model || '').startsWith('gemini-2.0-')) {
         aiSettings.value.model = 'gemini-2.0-flash'
       }
     }
@@ -136,7 +134,7 @@ async function saveSettings() {
       aiSettings.value.provider = 'google'
     }
 
-    if (aiSettings.value.provider === 'google' && !String(aiSettings.value.model || '').startsWith('gemini-')) {
+    if (aiSettings.value.provider === 'google' && !String(aiSettings.value.model || '').startsWith('gemini-2.0-')) {
       aiSettings.value.model = 'gemini-2.0-flash'
     }
 

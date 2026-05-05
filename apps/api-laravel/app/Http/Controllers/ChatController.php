@@ -381,8 +381,6 @@ class ChatController extends Controller
             $this->normalizeGoogleModel($model),
             'gemini-2.0-flash',
             'gemini-2.0-flash-lite',
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
         ])));
 
         $lastError = null;
@@ -510,7 +508,7 @@ class ChatController extends Controller
         $storedModel = trim((string) $storedModel);
 
         return match ($provider) {
-            'google' => str_starts_with($storedModel, 'gemini-') ? $storedModel : 'gemini-1.5-flash',
+            'google' => str_starts_with($storedModel, 'gemini-2.0-') ? $storedModel : 'gemini-2.0-flash',
             'anthropic' => str_starts_with($storedModel, 'claude-') ? $storedModel : 'claude-3-5-sonnet-latest',
             default => $storedModel !== '' ? $storedModel : 'gpt-4o-mini',
         };
@@ -524,15 +522,15 @@ class ChatController extends Controller
             return null;
         }
 
-        if (str_starts_with($model, 'gemini-')) {
+        if (str_starts_with($model, 'gemini-2.0-')) {
             return $model;
         }
 
-        if ($model === 'google') {
+        if ($model === 'google' || str_starts_with($model, 'gemini-1.5-')) {
             return 'gemini-2.0-flash';
         }
 
-        return null;
+        return 'gemini-2.0-flash';
     }
 
     private function fallbackReply(string $message): string
