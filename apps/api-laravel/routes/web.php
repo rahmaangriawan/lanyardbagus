@@ -109,12 +109,49 @@ Route::get('/clear-cache-production', function () {
 // TEMPORARY: Debug site verification
 Route::get('/debug-settings', function () {
     $settings = SiteSetting::first();
+    $systemGsc = \App\Models\Setting::get('google_search_console');
+    $systemBing = \App\Models\Setting::get('bing_webmaster');
+
     return [
-        'google_site_verification' => $settings->google_site_verification ?? 'NULL',
-        'bing_site_verification' => $settings->bing_site_verification ?? 'NULL',
-        'site_title' => $settings->site_title ?? 'NULL',
-        'has_settings' => $settings ? true : false,
+        'site_settings_table' => [
+            'google_site_verification' => $settings->google_site_verification ?? 'NULL',
+            'bing_site_verification' => $settings->bing_site_verification ?? 'NULL',
+            'site_title' => $settings->site_title ?? 'NULL',
+            'has_settings' => $settings ? true : false,
+        ],
+        'system_settings_table' => [
+            'google_search_console' => $systemGsc ?: 'NULL',
+            'bing_webmaster' => $systemBing ?: 'NULL',
+        ],
+        'blade_will_use' => [
+            'google' => $settings->google_site_verification ?? $systemGsc ?? 'NULL (no meta tag will render)',
+            'bing' => $settings->bing_site_verification ?? $systemBing ?? 'NULL (no meta tag will render)',
+        ],
+        'timestamp' => now()->toDateTimeString(),
     ];
+});
+
+// TEMPORARY: Test meta tag rendering directly
+Route::get('/debug-meta', function () {
+    $settings = SiteSetting::first();
+    $gsc = $settings->google_site_verification ?? \App\Models\Setting::get('google_search_console') ?? null;
+    $bing = $settings->bing_site_verification ?? \App\Models\Setting::get('bing_webmaster') ?? null;
+
+    $html = '<h1>Meta Tag Test</h1>';
+    $html .= '<pre>';
+    if ($gsc) {
+        $html .= htmlspecialchars('<meta name="google-site-verification" content="' . $gsc . '">') . "\n";
+    } else {
+        $html .= "GOOGLE: NO META TAG (value is null)\n";
+    }
+    if ($bing) {
+        $html .= htmlspecialchars('<meta name="msvalidate.01" content="' . $bing . '">') . "\n";
+    } else {
+        $html .= "BING: NO META TAG (value is null)\n";
+    }
+    $html .= '</pre>';
+    $html .= '<hr><a href="/">Back to Home</a>';
+    return $html;
 });
 
 // ============================================================
