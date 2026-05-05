@@ -33,15 +33,32 @@
         <button @click="showCatForm = !showCatForm" class="px-3 py-2 text-sm bg-black text-white rounded-lg">{{ showCatForm ? 'Tutup' : 'Tambah Kategori' }}</button>
       </div>
 
-      <div v-if="showCatForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <input v-model="catForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': catErrors.name }" placeholder="Nama kategori (mis. Lanyard)">
-        <input v-model="catForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (mis. lanyard)">
-        <input v-model="catForm.image" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="URL gambar (opsional)">
-        <input v-model="catForm.description" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" placeholder="Deskripsi (opsional)">
-        <div class="flex items-center gap-3 md:col-span-3">
+      <div v-if="showCatForm" class="space-y-3 mb-6 p-4 bg-gray-50 rounded-xl border">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input v-model="catForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': catErrors.name }" placeholder="Nama kategori (mis. Lanyard)">
+          <input v-model="catForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (mis. lanyard)">
+          <input v-model="catForm.description" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="Deskripsi (opsional)">
+        </div>
+        <!-- Image picker for category -->
+        <div>
+          <p class="text-xs font-medium text-gray-600 mb-2">Gambar Kategori <span class="text-gray-400">(tampil di mega menu)</span></p>
+          <div class="flex items-start gap-4">
+            <MediaPicker v-model="catImageObj" label="Pilih dari Media Library" />
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 mb-1">atau masukkan URL langsung:</p>
+              <input
+                v-model="catForm.image"
+                class="border rounded-lg px-3 py-2 text-sm w-full"
+                placeholder="https://... atau /storage/media/..."
+              >
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
           <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="catForm.is_active"> Aktif</label>
           <input v-model.number="catForm.sort_order" type="number" class="border rounded-lg px-3 py-2 text-sm w-32" placeholder="Urutan">
           <button @click="submitCategory" class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg">Simpan</button>
+          <button @click="cancelCatForm" class="px-3 py-2 text-sm border rounded-lg">Batal</button>
         </div>
       </div>
 
@@ -49,6 +66,7 @@
         <table class="w-full text-sm">
           <thead class="bg-muted/50 border-b">
             <tr>
+              <th class="text-left p-3 w-16">Gambar</th>
               <th class="text-left p-3">Nama</th>
               <th class="text-left p-3">Slug</th>
               <th class="text-left p-3">Aktif</th>
@@ -58,6 +76,12 @@
           </thead>
           <tbody>
             <tr v-for="c in categories" :key="c.id" class="border-b">
+              <td class="p-3">
+                <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border flex items-center justify-center">
+                  <img v-if="c.image" :src="c.image" :alt="c.name" class="w-full h-full object-cover" />
+                  <svg v-else class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>
+                </div>
+              </td>
               <td class="p-3 font-medium">{{ c.name }}</td>
               <td class="p-3">{{ c.slug }}</td>
               <td class="p-3">{{ c.is_active ? 'Ya' : 'Tidak' }}</td>
@@ -72,7 +96,7 @@
               </td>
             </tr>
             <tr v-if="categories.length === 0">
-              <td colspan="5" class="p-6 text-center text-muted-foreground">Belum ada kategori</td>
+              <td colspan="6" class="p-6 text-center text-muted-foreground">Belum ada kategori</td>
             </tr>
           </tbody>
         </table>
@@ -264,8 +288,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import MediaPicker from '../components/MediaPicker.vue'
 
 const API_URL = 'https://lanyardbagus.com'
 const auth = useAuthStore()
@@ -278,6 +303,24 @@ const showProdForm = ref(false)
 const toasts = ref([])
 
 const catForm = ref({ name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 })
+// Tracks the media object selected via MediaPicker; syncs to catForm.image
+const catImageObj = ref(null)
+
+watch(catImageObj, (val) => {
+  if (val && typeof val === 'object') {
+    catForm.value.image = val.url
+  } else if (!val) {
+    catForm.value.image = ''
+  }
+})
+
+// When image URL is typed manually, clear the picker selection
+watch(() => catForm.value.image, (val) => {
+  if (catImageObj.value && catImageObj.value.url !== val) {
+    catImageObj.value = null
+  }
+})
+
 const prodForm = ref({ category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', variants: [], accessories: [] })
 
 const editProd = ref(null)
@@ -359,6 +402,7 @@ async function submitCategory() {
     showCatForm.value = false
     editingCategoryId.value = null
     catForm.value = { name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 }
+    catImageObj.value = null
     fetchCategories()
     showToast('Kategori berhasil disimpan', 'success')
   } else {
@@ -371,7 +415,16 @@ async function submitCategory() {
 function editCategory(c) {
   showCatForm.value = true
   editingCategoryId.value = c.id
-  catForm.value = { name: c.name, slug: c.slug, description: c.description, image: c.image, is_active: c.is_active, sort_order: c.sort_order }
+  catForm.value = { name: c.name, slug: c.slug, description: c.description, image: c.image || '', is_active: c.is_active, sort_order: c.sort_order }
+  // Pre-populate picker preview if image exists
+  catImageObj.value = c.image ? { url: c.image } : null
+}
+
+function cancelCatForm() {
+  showCatForm.value = false
+  editingCategoryId.value = null
+  catForm.value = { name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 }
+  catImageObj.value = null
 }
 
 async function deleteCategory(c) {

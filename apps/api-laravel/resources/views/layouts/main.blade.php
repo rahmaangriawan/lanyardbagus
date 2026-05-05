@@ -97,7 +97,7 @@
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(10,11,13,0.10), 0 2px 8px rgba(10,11,13,0.06);
             padding: 20px;
-            width: 560px;
+            width: 620px;
             max-width: calc(100vw - 48px);
         }
 
@@ -137,6 +137,10 @@
             'label' => 'Pesan Sekarang',
             'href' => '/#hubungi',
         ]);
+        // Load product categories for mega menu
+        $megaCategories = \App\Models\ProductCategory::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'slug', 'name', 'image']);
     @endphp
 
     <!-- Global Top Navigation -->
@@ -171,66 +175,90 @@
                             </button>
                             <div class="mega-dropdown" role="menu">
                                 <div class="mega-dropdown-inner">
-                                    <div class="grid grid-cols-2 gap-6">
-                                        <!-- Categories -->
-                                        <div>
+                                    <div class="flex gap-6">
+                                        <!-- Categories with images -->
+                                        <div class="flex-1 min-w-0">
                                             <h4 class="text-xs font-semibold text-cb-muted uppercase tracking-wider mb-3">Kategori</h4>
-                                            <div class="space-y-0.5">
-                                                <a href="/katalog/lanyard" class="flex items-center gap-2.5 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft text-sm text-cb-body hover:text-cb-blue transition-colors">
-                                                    <svg class="w-4 h-4 text-cb-muted-soft shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                                                    Lanyard Custom
-                                                </a>
-                                                <a href="/katalog/wristband" class="flex items-center gap-2.5 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft text-sm text-cb-body hover:text-cb-blue transition-colors">
-                                                    <svg class="w-4 h-4 text-cb-muted-soft shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
-                                                    Wristband
-                                                </a>
-                                                <a href="/katalog/keychain" class="flex items-center gap-2.5 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft text-sm text-cb-body hover:text-cb-blue transition-colors">
-                                                    <svg class="w-4 h-4 text-cb-muted-soft shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.562-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1.001.43-1.563A6 6 0 1121.75 8.25z"/></svg>
-                                                    Keychain
-                                                </a>
-                                                <a href="/katalog/id-card" class="flex items-center gap-2.5 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft text-sm text-cb-body hover:text-cb-blue transition-colors">
-                                                    <svg class="w-4 h-4 text-cb-muted-soft shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-                                                    ID Card
-                                                </a>
-                                                <a href="/katalog/card-holder" class="flex items-center gap-2.5 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft text-sm text-cb-body hover:text-cb-blue transition-colors">
-                                                    <svg class="w-4 h-4 text-cb-muted-soft shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
-                                                    Card Holder
-                                                </a>
-                                                <a href="/katalog" class="flex items-center gap-1.5 mt-2 px-2.5 text-sm font-medium text-cb-blue hover:text-cb-blue-active transition-colors">
-                                                    Lihat semua produk
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                                                </a>
+                                            <div class="grid grid-cols-3 gap-2">
+                                                @foreach($megaCategories as $cat)
+                                                    @php
+                                                        // Placeholder gradients per category
+                                                        $gradients = [
+                                                            'lanyard'     => 'from-blue-100 to-blue-200',
+                                                            'wristband'   => 'from-purple-100 to-purple-200',
+                                                            'keychain'    => 'from-amber-100 to-amber-200',
+                                                            'id-card'     => 'from-emerald-100 to-emerald-200',
+                                                            'card-holder' => 'from-rose-100 to-rose-200',
+                                                        ];
+                                                        $grad = $gradients[$cat->slug] ?? 'from-cb-surface-soft to-cb-surface-strong';
+                                                    @endphp
+                                                    <a href="/katalog/{{ $cat->slug }}" class="group/cat flex flex-col rounded-cb-sm overflow-hidden hover:ring-2 hover:ring-cb-blue/30 transition-all">
+                                                        <div class="relative w-full aspect-[4/3] bg-gradient-to-br {{ $grad }} overflow-hidden">
+                                                            @if($cat->image)
+                                                                <img
+                                                                    src="{{ $cat->image }}"
+                                                                    alt="{{ $cat->name }}"
+                                                                    class="w-full h-full object-cover group-hover/cat:scale-105 transition-transform duration-300"
+                                                                    loading="lazy"
+                                                                >
+                                                            @else
+                                                                {{-- Placeholder: centered icon --}}
+                                                                <div class="absolute inset-0 flex items-center justify-center opacity-40">
+                                                                    <svg class="w-8 h-8 text-cb-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="px-2 py-1.5 bg-white">
+                                                            <span class="text-xs font-medium text-cb-ink group-hover/cat:text-cb-blue transition-colors leading-tight block">{{ $cat->name }}</span>
+                                                        </div>
+                                                    </a>
+                                                @endforeach
                                             </div>
+                                            <a href="/katalog" class="flex items-center gap-1.5 mt-3 text-xs font-medium text-cb-blue hover:text-cb-blue-active transition-colors">
+                                                Lihat semua produk
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                            </a>
                                         </div>
+                                        <!-- Divider -->
+                                        <div class="w-px bg-cb-hairline self-stretch"></div>
                                         <!-- Featured -->
-                                        <div>
+                                        <div class="w-44 shrink-0">
                                             <h4 class="text-xs font-semibold text-cb-muted uppercase tracking-wider mb-3">Unggulan</h4>
                                             <div class="space-y-1">
-                                                <a href="/order?product_id=1" class="flex items-center gap-3 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-9 h-9 rounded-cb-sm bg-cb-blue/10 flex items-center justify-center text-cb-blue shrink-0">
-                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                                <a href="/order?product_id=1" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
+                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-blue/10 flex items-center justify-center text-cb-blue shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                                                     </div>
-                                                    <div>
-                                                        <p class="text-sm font-medium text-cb-ink">Lanyard Custom</p>
-                                                        <p class="text-xs text-cb-muted">Rp 10.000/pcs</p>
-                                                    </div>
-                                                </a>
-                                                <a href="/order?product_id=2" class="flex items-center gap-3 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-9 h-9 rounded-cb-sm bg-cb-accent-yellow/10 flex items-center justify-center text-cb-accent-yellow shrink-0">
-                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-sm font-medium text-cb-ink">Wristband</p>
-                                                        <p class="text-xs text-cb-muted">Rp 8.000/pcs</p>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Lanyard Custom</p>
+                                                        <p class="text-[11px] text-cb-muted">Rp 10.000/pcs</p>
                                                     </div>
                                                 </a>
-                                                <a href="/order?product_id=4" class="flex items-center gap-3 py-2 px-2.5 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-9 h-9 rounded-cb-sm bg-cb-semantic-up/10 flex items-center justify-center text-cb-semantic-up shrink-0">
-                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                                <a href="/order?product_id=2" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
+                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-accent-yellow/10 flex items-center justify-center text-cb-accent-yellow shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
                                                     </div>
-                                                    <div>
-                                                        <p class="text-sm font-medium text-cb-ink">ID Card PVC</p>
-                                                        <p class="text-xs text-cb-muted">Rp 15.000/pcs</p>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Wristband</p>
+                                                        <p class="text-[11px] text-cb-muted">Rp 8.000/pcs</p>
+                                                    </div>
+                                                </a>
+                                                <a href="/order?product_id=4" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
+                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-semantic-up/10 flex items-center justify-center text-cb-semantic-up shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-medium text-cb-ink leading-tight">ID Card PVC</p>
+                                                        <p class="text-[11px] text-cb-muted">Rp 15.000/pcs</p>
+                                                    </div>
+                                                </a>
+                                                <a href="/order?product_id=3" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
+                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-surface-strong flex items-center justify-center text-cb-muted shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.562-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1.001.43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Keychain</p>
+                                                        <p class="text-[11px] text-cb-muted">Rp 7.000/pcs</p>
                                                     </div>
                                                 </a>
                                             </div>
@@ -298,18 +326,37 @@
                                 <span>{{ $label }}</span>
                                 <svg class="mobile-chevron w-4 h-4 text-cb-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </summary>
-                            <div class="pl-4 pb-3 flex flex-col gap-0.5 border-l-2 border-cb-hairline ml-2 mt-1">
-                                <span class="text-xs font-semibold text-cb-muted uppercase tracking-wider py-2">Kategori</span>
-                                <a href="/katalog/lanyard" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Lanyard Custom</a>
-                                <a href="/katalog/wristband" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Wristband Lanyard</a>
-                                <a href="/katalog/keychain" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Keychain Lanyard</a>
-                                <a href="/katalog/id-card" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">ID Card</a>
-                                <a href="/katalog/card-holder" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Card Holder</a>
-                                <a href="/katalog" class="py-2 px-2 text-sm font-medium text-cb-blue mobile-menu-link">Lihat Semua Produk →</a>
-                                <span class="text-xs font-semibold text-cb-muted uppercase tracking-wider py-2 mt-2">Unggulan</span>
-                                <a href="/order?product_id=1" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Lanyard Custom — Rp 10.000/pcs</a>
-                                <a href="/order?product_id=2" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">Wristband — Rp 8.000/pcs</a>
-                                <a href="/order?product_id=4" class="py-2 px-2 rounded-cb-sm text-sm text-cb-body hover:text-cb-blue hover:bg-cb-surface-soft transition-colors mobile-menu-link">ID Card PVC — Rp 15.000/pcs</a>
+                            <div class="pb-3 border-l-2 border-cb-hairline ml-2 mt-1">
+                                <span class="text-xs font-semibold text-cb-muted uppercase tracking-wider py-2 pl-4 block">Kategori</span>
+                                <div class="grid grid-cols-3 gap-2 px-4 pb-2">
+                                    @foreach($megaCategories as $cat)
+                                        @php
+                                            $gradients = [
+                                                'lanyard'     => 'from-blue-100 to-blue-200',
+                                                'wristband'   => 'from-purple-100 to-purple-200',
+                                                'keychain'    => 'from-amber-100 to-amber-200',
+                                                'id-card'     => 'from-emerald-100 to-emerald-200',
+                                                'card-holder' => 'from-rose-100 to-rose-200',
+                                            ];
+                                            $grad = $gradients[$cat->slug] ?? 'from-cb-surface-soft to-cb-surface-strong';
+                                        @endphp
+                                        <a href="/katalog/{{ $cat->slug }}" class="flex flex-col rounded-cb-sm overflow-hidden mobile-menu-link">
+                                            <div class="relative w-full aspect-[4/3] bg-gradient-to-br {{ $grad }}">
+                                                @if($cat->image)
+                                                    <img src="{{ $cat->image }}" alt="{{ $cat->name }}" class="w-full h-full object-cover" loading="lazy">
+                                                @else
+                                                    <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                                                        <svg class="w-6 h-6 text-cb-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="px-1.5 py-1 bg-white border border-t-0 border-cb-hairline rounded-b-cb-sm">
+                                                <span class="text-[11px] font-medium text-cb-ink leading-tight block truncate">{{ $cat->name }}</span>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                                <a href="/katalog" class="pl-4 py-2 text-sm font-medium text-cb-blue mobile-menu-link block">Lihat Semua Produk →</a>
                             </div>
                         </details>
                     @else
