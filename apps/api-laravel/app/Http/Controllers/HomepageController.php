@@ -74,6 +74,7 @@ class HomepageController extends Controller
                 ['label' => 'Cerita Kami', 'href' => '#cerita'],
                 ['label' => 'Produk', 'href' => '#produk'],
                 ['label' => 'Harga', 'href' => '#harga'],
+                ['label' => 'Promo', 'href' => '/promo'],
                 ['label' => 'FAQ', 'href' => '#faq'],
             ],
             'header_cta' => [

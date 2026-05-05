@@ -232,6 +232,12 @@ Route::get('/faq', function () {
     return view('faq', compact('settings'));
 });
 
+// Promo Page
+Route::get('/promo', function () {
+    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
+    return view('promo', compact('settings'));
+});
+
 // Static Pages
 Route::get('/kontak', function () {
     $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
