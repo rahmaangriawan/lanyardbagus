@@ -1250,6 +1250,7 @@
             right: 24px;
             z-index: 9999;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            pointer-events: none;
         }
 
         .chat-toggle-btn {
@@ -1266,6 +1267,8 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
             transition: all 0.2s ease;
             position: relative;
+            z-index: 2;
+            pointer-events: auto;
         }
 
         .chat-toggle-btn:hover {
@@ -1306,6 +1309,7 @@
             overflow: hidden;
             animation: slideUp 0.25s ease;
             border: 1px solid #e5e7eb;
+            pointer-events: auto;
         }
 
         @keyframes slideUp {
@@ -1739,16 +1743,27 @@
                 }
             }
 
-            function toggleChat() {
-                isOpen = !isOpen;
-                chatBox.style.display = isOpen ? 'flex' : 'none';
+            function openChat() {
+                isOpen = true;
+                chatBox.style.display = 'flex';
 
+                showChatView();
+                if (userInfo) {
+                    chatInput.focus();
+                    scrollToBottom();
+                }
+            }
+
+            function closeChat() {
+                isOpen = false;
+                chatBox.style.display = 'none';
+            }
+
+            function toggleChat() {
                 if (isOpen) {
-                    showChatView();
-                    if (userInfo) {
-                        chatInput.focus();
-                        scrollToBottom();
-                    }
+                    closeChat();
+                } else {
+                    openChat();
                 }
             }
 
@@ -1839,13 +1854,25 @@
 
             // Event listeners
             if (chatToggle) {
-                chatToggle.addEventListener('click', toggleChat);
+                chatToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleChat();
+                });
             }
             if (chatClose) {
-                chatClose.addEventListener('click', toggleChat);
+                chatClose.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeChat();
+                });
             }
             if (chatClose2) {
-                chatClose2.addEventListener('click', toggleChat);
+                chatClose2.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeChat();
+                });
             }
             if (chatForm) {
                 chatForm.addEventListener('submit', (e) => {
@@ -1872,8 +1899,8 @@
 
             // Close chat when clicking outside
             document.addEventListener('click', (e) => {
-                if (isOpen && !chatBox.contains(e.target) && !chatToggle.contains(e.target)) {
-                    toggleChat();
+                if (isOpen && chatBox && chatToggle && !chatBox.contains(e.target) && !chatToggle.contains(e.target)) {
+                    closeChat();
                 }
             });
 
