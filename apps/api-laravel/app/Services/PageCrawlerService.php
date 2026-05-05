@@ -152,52 +152,100 @@ class PageCrawlerService
     }
 
     /**
-     * Get all training data for AI context (limited size)
+     * Get relevant training data for AI context based on keywords
      */
-    public function getTrainingData(): array
+    public function getRelevantTrainingData(string $query): array
     {
+        // Extract keywords from query
+        $keywords = $this->extractKeywords($query);
+        
         $trainingData = ChatMessage::where('is_training_data', true)
             ->orderBy('created_at', 'desc')
-            ->limit(5) // Limit to 5 most recent entries
             ->get(['message', 'metadata'])
             ->toArray();
 
-        $context = '';
-        $totalChars = 0;
-        $maxChars = 3000; // Limit context to ~3000 characters to stay within token limits
+        $relevantEntries = [];
+        $maxChars = 2500;
 
         foreach ($trainingData as $data) {
+            $content = strtolower($data['message'] ?? '');
+            $title = strtolower($data['metadata']['title'] ?? '');
+            
+            // Calculate relevance score based on keyword matches
+            $score = 0;
+            foreach ($keywords as $keyword) {
+                if (strpos($content, $keyword) !== false) $score += 2;
+                if (strpos($title, $keyword) !== false) $score += 3;
+            }
+
+            if ($score > 0) {
+                $relevantEntries[] = [
+                    'data' => $data,
+                    'score' => $score,
+                ];
+            }
+        }
+
+        // Sort by relevance score
+        usort($relevantEntries, function($a, $b) {
+            return $b['score'] - $a['score'];
+        });
+
+        // Build context from most relevant entries
+        $context = '';
+        $totalChars = 0;
+        $usedCount = 0;
+
+        foreach ($relevantEntries as $entry) {
+            $data = $entry['data'];
             $url = $data['metadata']['url'] ?? 'Unknown';
             $title = $data['metadata']['title'] ?? '';
             $content = $data['message'] ?? '';
             
-            // Limit each entry to 500 chars
-            if (strlen($content) > 500) {
-                $content = substr($content, 0, 500) . '...';
+            // Limit content to 400 chars per entry
+            if (strlen($content) > 400) {
+                $content = substr($content, 0, 400) . '...';
             }
             
-            if (!empty($content)) {
-                $entry = "Source: {$url}\n";
-                if ($title) {
-                    $entry .= "Title: {$title}\n";
-                }
-                $entry .= "Content: {$content}\n\n";
-                
-                // Check if adding this entry would exceed max
-                if ($totalChars + strlen($entry) > $maxChars) {
-                    break;
-                }
-                
-                $context .= $entry;
-                $totalChars += strlen($entry);
+            $entryText = "Source: {$url}\nTitle: {$title}\nContent: {$content}\n\n";
+            
+            if ($totalChars + strlen($entryText) <= $maxChars) {
+                $context .= $entryText;
+                $totalChars += strlen($entryText);
+                $usedCount++;
             }
         }
 
         return [
             'context' => $context,
-            'count' => count($trainingData),
+            'count' => $usedCount,
             'chars' => $totalChars,
+            'has_relevant' => !empty($context),
         ];
+    }
+
+    /**
+     * Extract keywords from a query
+     */
+    private function extractKeywords(string $query): array
+    {
+        // Remove common Indonesian stop words
+        $stopWords = ['apa', 'bagaimana', 'berapa', 'di', 'ke', 'dari', 'untuk', 'dengan', 'dan', 'atau', 'yang', 'adalah', 'ini', 'itu', 'saya', 'kamu', 'mau', 'ingin', 'bisa', 'tolong', 'harga', 'beli', 'pesan'];
+        
+        $query = strtolower($query);
+        foreach ($stopWords as $word) {
+            $query = str_replace(' ' . $word . ' ', ' ', $query);
+            $query = str_replace($word . ' ', '', $query);
+            $query = str_replace(' ' . $word, '', $query);
+        }
+        
+        // Extract words (min 3 chars)
+        $words = preg_split('/\s+/', $query);
+        $keywords = array_filter($words, function($word) {
+            return strlen($word) >= 3;
+        });
+        
+        return array_values($keywords);
     }
 
     /**

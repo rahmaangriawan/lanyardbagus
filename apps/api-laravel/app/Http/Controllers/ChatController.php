@@ -59,17 +59,22 @@ class ChatController extends Controller
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
             $enabled = Setting::get('ai_enabled', 'true');
 
-            // Add training data context if available
+            // Add training data context if available (RAG approach)
             $crawler = new PageCrawlerService();
-            $trainingContext = $crawler->getTrainingData();
+            $trainingContext = $crawler->getRelevantTrainingData($validated['message']);
+            
             if (!empty($trainingContext['context'])) {
-                \Log::info('AI Chat: Training context loaded', [
+                \Log::info('AI Chat: Relevant training context loaded', [
                     'count' => $trainingContext['count'],
                     'chars' => $trainingContext['chars'],
+                    'has_relevant' => $trainingContext['has_relevant'],
+                    'query' => $validated['message'],
                 ]);
-                $systemPrompt .= "\n\n=== INFORMASI WEBSITE (WAJIB DIGUNAKAN) ===\n" . $trainingContext['context'] . "=== END INFORMASI ===\n\nPENTING: Jawab pertanyaan user berdasarkan informasi website di atas. Jika informasi tidak ada, jawab dengan jujur dan arahkan ke WhatsApp.";
+                $systemPrompt .= "\n\n=== INFORMASI WEBSITE YANG RELEVAN (WAJIB DIGUNAKAN) ===\n" . $trainingContext['context'] . "=== END INFORMASI ===\n\nPENTING: Jawab pertanyaan user BERDASARKAN informasi website di atas. Jika informasi ada di konteks, gunakan itu sebagai jawaban utama. Jika tidak ada, jawab dengan jujur dan arahkan ke WhatsApp.";
             } else {
-                \Log::warning('AI Chat: No training context available');
+                \Log::warning('AI Chat: No relevant training context found', [
+                    'query' => $validated['message'],
+                ]);
             }
 
             if ($enabled === 'false') {
