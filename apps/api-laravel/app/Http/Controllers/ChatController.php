@@ -64,6 +64,13 @@ class ChatController extends Controller
                 ], 503);
             }
 
+            if (empty($apiKey)) {
+                \Log::warning('AI chat missing API key', ['provider' => $provider]);
+                return response()->json([
+                    'message' => 'Maaf, API key belum diset. Silakan set API key di admin panel AI Chat settings.'
+                ]);
+            }
+
             // Get recent conversation history for context
             $history = ChatMessage::bySession($validated['session_id'])
                 ->orderBy('created_at', 'desc')
@@ -119,14 +126,17 @@ class ChatController extends Controller
                 'message' => $response['content'],
                 'id' => $chatMessage->id,
             ]);
-        } catch (\Throwable $e) {
-            \Log::error('Chat send failed unexpectedly', [
-                'error' => $e->getMessage(),
+        } catch (\Exception $e) {
+            \Log::error('AI chat unexpected error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'message' => $this->fallbackReply($request->input('message', ''))
-            ]);
+                'message' => 'Maaf, terjadi kesalahan sistem: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
