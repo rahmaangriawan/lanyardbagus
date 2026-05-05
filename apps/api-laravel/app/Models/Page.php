@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Page extends Model
 {
+    protected $fillable = [
         'title', 'slug', 'content', 'is_published', 'is_indexed',
         'parent_id', 'seo_title', 'meta_description', 'featured_image_id', 'published_at',
+    ];
 
     protected function casts(): array
     {
