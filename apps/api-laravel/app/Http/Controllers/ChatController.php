@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\Setting;
+use App\Services\PageCrawlerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
@@ -57,6 +58,13 @@ class ChatController extends Controller
             $model = $this->resolveModel($provider, Setting::get('ai_model'));
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
             $enabled = Setting::get('ai_enabled', 'true');
+
+            // Add training data context if available
+            $crawler = new PageCrawlerService();
+            $trainingContext = $crawler->getTrainingData();
+            if (!empty($trainingContext['context'])) {
+                $systemPrompt .= "\n\n=== KONTEKS WEBSITE ===\n" . $trainingContext['context'] . "=== END KONTEKS ===\n\nGunakan informasi di atas untuk menjawab pertanyaan user dengan lebih akurat.";
+            }
 
             if ($enabled === 'false') {
                 return response()->json([
@@ -608,5 +616,46 @@ class ChatController extends Controller
     private function getDefaultWelcomeMessage(): string
     {
         return "Halo! 👋 Saya asisten Lanyard Bagus. Ada yang bisa saya bantu tentang lanyard custom?";
+    }
+
+    /**
+     * Crawl a page and extract training data
+     */
+    public function crawlPage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'url' => ['required', 'url'],
+        ]);
+
+        $crawler = new PageCrawlerService();
+        $result = $crawler->crawlPage($validated['url']);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get all crawled training data
+     */
+    public function getCrawledTrainingData(): JsonResponse
+    {
+        $crawler = new PageCrawlerService();
+        $data = $crawler->getAllTrainingData();
+
+        return response()->json($data);
+    }
+
+    /**
+     * Delete crawled training data
+     */
+    public function deleteCrawledData(string $url): JsonResponse
+    {
+        $decodedUrl = urldecode($url);
+        $crawler = new PageCrawlerService();
+        $deleted = $crawler->deleteTrainingData($decodedUrl);
+
+        return response()->json([
+            'success' => $deleted,
+            'message' => $deleted ? 'Training data deleted successfully' : 'Training data not found',
+        ]);
     }
 }

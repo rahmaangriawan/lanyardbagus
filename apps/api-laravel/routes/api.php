@@ -154,4 +154,9 @@ Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group
     Route::get('/chat/settings', [ChatController::class, 'getSettings']);
     Route::put('/chat/settings', [ChatController::class, 'updateSettings']);
     Route::post('/chat/test', [ChatController::class, 'testProvider']);
+    
+    // Page Crawler routes
+    Route::post('/chat/crawl', [ChatController::class, 'crawlPage']);
+    Route::get('/chat/crawl/training-data', [ChatController::class, 'getCrawledTrainingData']);
+    Route::delete('/chat/crawl/{url}', [ChatController::class, 'deleteCrawledData']);
 });

@@ -11,7 +11,10 @@ import {
   Bot,
   CheckCircle,
   X,
-  User
+  User,
+  Globe,
+  Trash2,
+  Plus
 } from 'lucide-vue-next'
 
 const API_URL = 'https://lanyardbagus.com'
@@ -40,6 +43,11 @@ const sessionMessages = ref([])
 
 // Training Data
 const trainingData = ref([])
+
+// Page Crawler
+const crawledData = ref([])
+const crawlUrl = ref('')
+const crawling = ref(false)
 
 // Provider models
 const providerModels = {
@@ -126,6 +134,51 @@ async function loadTrainingData() {
   }
 }
 
+async function loadCrawledData() {
+  try {
+    const res = await axios.get(`${API_URL}/api/admin/chat/crawl/training-data`, { withCredentials: true })
+    crawledData.value = res.data
+  } catch (err) {
+    console.error('Failed to load crawled data:', err)
+  }
+}
+
+async function crawlPage() {
+  if (!crawlUrl.value) {
+    alert('Masukkan URL halaman yang ingin di-crawl')
+    return
+  }
+
+  crawling.value = true
+  try {
+    const res = await axios.post(`${API_URL}/api/admin/chat/crawl`, { url: crawlUrl.value }, { withCredentials: true })
+    if (res.data.success) {
+      alert('Halaman berhasil di-crawl!')
+      crawlUrl.value = ''
+      loadCrawledData()
+    } else {
+      alert('Gagal crawl: ' + res.data.error)
+    }
+  } catch (err) {
+    console.error('Failed to crawl page:', err)
+    alert('Gagal crawl: ' + (err.response?.data?.message || err.message))
+  }
+  crawling.value = false
+}
+
+async function deleteCrawledData(url) {
+  if (!confirm(`Hapus training data dari ${url}?`)) return
+
+  try {
+    const encodedUrl = encodeURIComponent(url)
+    await axios.delete(`${API_URL}/api/admin/chat/crawl/${encodedUrl}`, { withCredentials: true })
+    loadCrawledData()
+  } catch (err) {
+    console.error('Failed to delete crawled data:', err)
+    alert('Gagal menghapus: ' + (err.response?.data?.message || err.message))
+  }
+}
+
 async function saveSettings() {
   loading.value = true
   try {
@@ -204,6 +257,7 @@ onMounted(() => {
   loadAISettings()
   loadSessions()
   loadTrainingData()
+  loadCrawledData()
 })
 </script>
 
@@ -241,6 +295,14 @@ onMounted(() => {
       >
         <Database class="w-4 h-4" />
         Training Data
+      </button>
+      <button
+        @click="activeTab = 'crawler'"
+        class="px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors"
+        :class="activeTab === 'crawler' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'"
+      >
+        <Globe class="w-4 h-4" />
+        Page Crawler
       </button>
     </div>
 
@@ -502,6 +564,73 @@ onMounted(() => {
           </div>
           <div v-if="trainingData.length === 0" class="text-center text-muted-foreground py-12">
             Belum ada data training. Tandai pesan dari sesi chat sebagai training data.
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    <!-- Page Crawler Tab -->
+    <div v-if="activeTab === 'crawler'" class="space-y-6">
+      <Card>
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+            <Globe class="w-5 h-5" />
+            Crawl Halaman Website
+          </h3>
+          <p class="text-sm text-muted-foreground">Extract konten dari halaman website untuk training data AI</p>
+        </div>
+        <div class="p-6 pt-0 space-y-4">
+          <div class="flex gap-3">
+            <Input
+              v-model="crawlUrl"
+              placeholder="https://lanyardbagus.com/halaman"
+              class="flex-1"
+            />
+            <Button
+              @click="crawlPage"
+              :disabled="crawling"
+              class="flex items-center gap-2"
+            >
+              <Plus class="w-4 h-4" />
+              {{ crawling ? 'Crawling...' : 'Crawl' }}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+            <Database class="w-5 h-5" />
+            Halaman yang Sudah Di-crawl ({{ crawledData.length }})
+          </h3>
+        </div>
+        <div class="p-6 pt-0">
+          <div v-if="crawledData.length > 0" class="space-y-3">
+            <div
+              v-for="item in crawledData"
+              :key="item.id"
+              class="p-4 border rounded-lg flex items-start justify-between gap-4"
+            >
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center gap-2">
+                  <Badge variant="outline">{{ item.content_length }} chars</Badge>
+                  <span class="text-xs text-muted-foreground">{{ item.created_at }}</span>
+                </div>
+                <p class="font-medium text-sm truncate">{{ item.title || item.url }}</p>
+                <p class="text-xs text-muted-foreground truncate">{{ item.url }}</p>
+              </div>
+              <button
+                @click="deleteCrawledData(item.url)"
+                class="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm"
+              >
+                <Trash2 class="w-4 h-4" />
+                Hapus
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-center text-muted-foreground py-12">
+            Belum ada halaman yang di-crawl. Masukkan URL di atas untuk memulai.
           </div>
         </div>
       </Card>
