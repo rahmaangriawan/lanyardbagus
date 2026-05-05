@@ -63,7 +63,13 @@ class ChatController extends Controller
             $crawler = new PageCrawlerService();
             $trainingContext = $crawler->getTrainingData();
             if (!empty($trainingContext['context'])) {
-                $systemPrompt .= "\n\n=== KONTEKS WEBSITE ===\n" . $trainingContext['context'] . "=== END KONTEKS ===\n\nGunakan informasi di atas untuk menjawab pertanyaan user dengan lebih akurat.";
+                \Log::info('AI Chat: Training context loaded', [
+                    'count' => $trainingContext['count'],
+                    'chars' => $trainingContext['chars'],
+                ]);
+                $systemPrompt .= "\n\n=== INFORMASI WEBSITE (WAJIB DIGUNAKAN) ===\n" . $trainingContext['context'] . "=== END INFORMASI ===\n\nPENTING: Jawab pertanyaan user berdasarkan informasi website di atas. Jika informasi tidak ada, jawab dengan jujur dan arahkan ke WhatsApp.";
+            } else {
+                \Log::warning('AI Chat: No training context available');
             }
 
             if ($enabled === 'false') {
