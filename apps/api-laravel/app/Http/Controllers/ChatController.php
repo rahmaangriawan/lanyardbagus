@@ -324,13 +324,6 @@ class ChatController extends Controller
 
     private function callGoogle(string $apiKey, string $model, array $messages): array
     {
-        $contents = array_map(function ($msg) {
-            return [
-                'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
-                'parts' => [['text' => $msg['content']]],
-            ];
-        }, array_filter($messages, fn ($m) => $m['role'] !== 'system'));
-
         $candidateModels = array_values(array_unique(array_filter([
             $this->normalizeGoogleModel($model),
             'gemini-2.0-flash',
@@ -343,19 +336,19 @@ class ChatController extends Controller
 
         foreach ($candidateModels as $candidateModel) {
             $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$candidateModel}:generateContent?key={$apiKey}", [
-                'contents' => $contents,
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 1000,
-                ],
+            ])->post('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', [
+                'model' => $candidateModel,
+                'messages' => $messages,
+                'temperature' => 0.7,
+                'max_tokens' => 1000,
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
 
-                $text = data_get($data, 'candidates.0.content.parts.0.text');
+                $text = data_get($data, 'choices.0.message.content');
                 if (filled($text)) {
                     return [
                         'success' => true,

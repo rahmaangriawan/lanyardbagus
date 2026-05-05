@@ -81,6 +81,9 @@ async function loadAISettings() {
     aiSettings.value = { ...aiSettings.value, ...res.data }
     apiKeySaved.value = !!res.data.has_api_key
     aiSettings.value.api_key = ''
+    if (aiSettings.value.provider === 'openai' && apiKeySaved.value && res.data.model && String(res.data.model).startsWith('gemini-')) {
+      aiSettings.value.provider = 'google'
+    }
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
   } catch (err) {
@@ -121,6 +124,14 @@ async function loadTrainingData() {
 async function saveSettings() {
   loading.value = true
   try {
+    const apiKey = (aiSettings.value.api_key || '').trim()
+    if (apiKey.startsWith('AIza')) {
+      aiSettings.value.provider = 'google'
+      if (!String(aiSettings.value.model || '').startsWith('gemini-')) {
+        aiSettings.value.model = 'gemini-2.0-flash'
+      }
+    }
+
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
     apiKeySaved.value = apiKeySaved.value || !!aiSettings.value.api_key
     aiSettings.value.api_key = ''
