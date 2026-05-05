@@ -3,7 +3,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Card, Button, Input, Label } from '../components/ui'
 import WysiwygEditor from '../components/WysiwygEditor.vue'
-import { ArrowLeft, Save, Loader2, Eye, Copy, Check, X } from 'lucide-vue-next'
+import MediaPickerModal from '../components/MediaPickerModal.vue'
+import { ArrowLeft, Save, Loader2, Eye, Copy, Check, X, Image as ImageIcon, Calendar } from 'lucide-vue-next'
 import axios from 'axios'
 
 const API_URL = 'https://lanyardbagus.com'
@@ -17,10 +18,12 @@ const page = ref({
   title: '',
   slug: '',
   content: '',
-  status: 'draft',
+  status: 'DRAFT',
   meta_title: '',
   meta_description: '',
-  robot_meta: 'index' // 'index' or 'noindex'
+  robot_meta: 'index', // 'index' or 'noindex'
+  featured_image: null,
+  published_at: null,
 })
 
 const loading = ref(false)
@@ -101,7 +104,14 @@ async function loadPage() {
   loading.value = true
   try {
     const res = await axios.get(`${API_URL}/api/admin/pages/${pageId.value}`, { withCredentials: true })
-    page.value = res.data
+    page.value = {
+      ...res.data,
+      featured_image: res.data.featuredImage || null
+    }
+    // Handle is_published to status mapping if needed
+    if (res.data.is_published !== undefined) {
+      page.value.status = res.data.is_published ? 'PUBLISHED' : 'DRAFT'
+    }
   } catch (err) {
     console.error('Failed to load page:', err)
     alert('Gagal memuat halaman')
@@ -121,10 +131,17 @@ function generateSlug() {
 async function savePage() {
   saving.value = true
   try {
+    const payload = {
+      ...page.value,
+      is_published: page.value.status === 'PUBLISHED',
+      featured_image_id: page.value.featured_image?.id || null
+    }
+    delete payload.featured_image
+
     if (isEdit.value) {
-      await axios.put(`${API_URL}/api/admin/pages/${pageId.value}`, page.value, { withCredentials: true })
+      await axios.put(`${API_URL}/api/admin/pages/${pageId.value}`, payload, { withCredentials: true })
     } else {
-      await axios.post(`${API_URL}/api/admin/pages`, page.value, { withCredentials: true })
+      await axios.post(`${API_URL}/api/admin/pages`, payload, { withCredentials: true })
     }
     router.push('/pages')
   } catch (err) {
@@ -132,6 +149,15 @@ async function savePage() {
   } finally {
     saving.value = false
   }
+}
+
+function onMediaSelected(media) {
+  page.value.featured_image = media
+  showMediaPicker.value = false
+}
+
+function removeFeaturedImage() {
+  page.value.featured_image = null
 }
 
 function viewPage() {
@@ -336,7 +362,59 @@ function viewPage() {
             </div>
           </Card>
         </div>
+
+        <!-- Featured Image -->
+        <div>
+          <h3 class="text-xs font-semibold text-muted-foreground uppercase mb-2">FEATURED IMAGE</h3>
+          <Card class="p-3">
+            <div v-if="page.featured_image" class="relative">
+              <img 
+                :src="page.featured_image.url" 
+                class="w-full h-32 object-cover rounded-lg"
+              >
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                class="absolute top-2 right-2 h-6 w-6 bg-background/80 hover:bg-background"
+                @click="removeFeaturedImage"
+              >
+                <X class="w-3 h-3" />
+              </Button>
+            </div>
+            <div 
+              v-else 
+              class="h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-foreground transition-colors"
+              @click="showMediaPicker = true"
+            >
+              <ImageIcon class="w-8 h-8 text-muted-foreground mb-2" />
+              <span class="text-xs text-muted-foreground">Pilih Gambar</span>
+            </div>
+          </Card>
+        </div>
+
+        <!-- Publish Date -->
+        <div>
+          <h3 class="text-xs font-semibold text-muted-foreground uppercase mb-2">TANGGAL PUBLISH</h3>
+          <Card class="p-3">
+            <div class="flex items-center gap-2">
+              <Calendar class="w-4 h-4 text-muted-foreground" />
+              <Input 
+                type="datetime-local" 
+                v-model="page.published_at"
+                class="text-sm flex-1"
+              />
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
+
+    <!-- Media Picker Modal -->
+    <MediaPickerModal 
+      v-if="showMediaPicker"
+      @select="onMediaSelected"
+      @close="showMediaPicker = false"
+      :show="showMediaPicker"
+    />
   </div>
 </template>

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Card, Button, Input } from '../components/ui'
-import { Plus, Search, Trash2, Loader2, ChevronDown, Eye } from 'lucide-vue-next'
+import { Plus, Search, Trash2, Loader2, ChevronDown, Eye, Image as ImageIcon } from 'lucide-vue-next'
 import axios from 'axios'
 
 const API_URL = 'https://lanyardbagus.com'
@@ -126,8 +126,14 @@ async function deletePage(id, event) {
             class="hover:bg-muted/50 transition-colors group"
           >
             <td class="px-0 py-0 font-medium">
-              <router-link :to="`/pages/edit/${page.id}`" class="block px-6 py-4 w-full h-full">
-                {{ page.title }}
+              <router-link :to="`/pages/edit/${page.id}`" class="flex items-center gap-3 px-6 py-4 w-full h-full">
+                <div v-if="page.featured_image" class="w-10 h-10 rounded border bg-muted flex-shrink-0 overflow-hidden">
+                  <img :src="page.featured_image.url" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-10 h-10 rounded border bg-muted flex items-center justify-center flex-shrink-0">
+                  <ImageIcon class="w-4 h-4 text-muted-foreground" />
+                </div>
+                <span>{{ page.title }}</span>
               </router-link>
             </td>
             <td class="px-0 py-0 text-muted-foreground font-mono text-sm">

@@ -17,7 +17,7 @@ class PageController extends Controller
             return response()->json($query->select('id', 'title', 'slug', 'parent_id')->get());
         }
 
-        return response()->json($query->get());
+        return response()->json($query->with('featuredImage:id,url,file_name')->get());
     }
 
     public function store(Request $request): JsonResponse
@@ -32,6 +32,7 @@ class PageController extends Controller
             'seo_title'          => ['nullable', 'string', 'max:255'],
             'meta_description'   => ['nullable', 'string', 'max:500'],
             'featured_image_id'  => ['nullable', 'exists:media,id'],
+            'published_at'       => ['nullable', 'date'],
         ]);
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['title']);
@@ -60,6 +61,7 @@ class PageController extends Controller
             'seo_title'          => ['nullable', 'string', 'max:255'],
             'meta_description'   => ['nullable', 'string', 'max:500'],
             'featured_image_id'  => ['nullable', 'exists:media,id'],
+            'published_at'       => ['nullable', 'date'],
         ]);
 
         // Prevent circular parent reference
@@ -71,7 +73,7 @@ class PageController extends Controller
         \Illuminate\Support\Facades\Cache::forget("page_public_{$page->slug}");
         \Illuminate\Support\Facades\Cache::forget('pages_list');
 
-        return response()->json($page->load('children:id,title,slug,parent_id'));
+        return response()->json($page->load('children:id,title,slug,parent_id', 'featuredImage:id,url,file_name'));
     }
 
     public function destroy(Page $page): JsonResponse
