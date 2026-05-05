@@ -274,40 +274,7 @@
                         <i data-lucide="package" class="w-5 h-5"></i>
                         Detail Pesanan
                     </div>
-                    <div id="items-container">
-                        <div class="item-row" data-index="0">
-                            <div class="form-group">
-                                <label>Jenis Lanyard *</label>
-                                <select class="form-select item-name" required>
-                                    <option value="">Pilih jenis</option>
-                                    <option value="Lanyard Polyester">Lanyard Polyester</option>
-                                    <option value="Lanyard Nylon">Lanyard Nylon</option>
-                                    <option value="Lanyard Satin">Lanyard Satin</option>
-                                    <option value="Lanyard Tisu">Lanyard Tisu</option>
-                                    <option value="Lanyard Printing">Lanyard Printing</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Ukuran</label>
-                                <select class="form-select item-size">
-                                    <option value="1 cm">1 cm</option>
-                                    <option value="1.5 cm" selected>1.5 cm</option>
-                                    <option value="2 cm">2 cm</option>
-                                    <option value="2.5 cm">2.5 cm</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Jumlah (pcs) *</label>
-                                <input type="number" class="form-input item-qty" min="50" value="100" required>
-                            </div>
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn-remove" onclick="removeItem(this)" style="display:none">
-                                    <i data-lucide="x" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="items-container"></div>
                     <button type="button" class="btn-add" onclick="addItem()">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Tambah Item
@@ -400,66 +367,93 @@
     <script>
         const API_URL = '{{ url("/") }}';
         let selectedPayment = 'qris';
-        let itemIndex = 1;
+        let itemIndex = 0;
+        let allProducts = [];
+        let preselectedProductId = null;
 
-        // Pricing (per pcs, simplified)
-        const PRICING = {
-            'Lanyard Polyester': { '1 cm': 8000, '1.5 cm': 10000, '2 cm': 12000, '2.5 cm': 14000 },
-            'Lanyard Nylon': { '1 cm': 10000, '1.5 cm': 12000, '2 cm': 14000, '2.5 cm': 16000 },
-            'Lanyard Satin': { '1 cm': 12000, '1.5 cm': 14000, '2 cm': 16000, '2.5 cm': 18000 },
-            'Lanyard Tisu': { '1 cm': 9000, '1.5 cm': 11000, '2 cm': 13000, '2.5 cm': 15000 },
-            'Lanyard Printing': { '1 cm': 15000, '1.5 cm': 18000, '2 cm': 20000, '2.5 cm': 22000 },
-        };
+        // Load products from API on page load
+        async function loadProducts() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                preselectedProductId = params.get('product_id');
 
-        function getPrice(name, size) {
-            return PRICING[name]?.[size] || 0;
+                // Fetch all active products grouped by category
+                const res = await fetch(`${API_URL}/api/products`);
+                if (res.ok) {
+                    allProducts = await res.json();
+                }
+            } catch (e) {
+                console.warn('Could not load products from API, using fallback');
+            }
+
+            // Add initial item row
+            if (preselectedProductId) {
+                addItem(preselectedProductId);
+            } else {
+                addItem();
+            }
         }
 
-        function selectPayment(el) {
-            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
-            el.classList.add('active');
-            selectedPayment = el.dataset.method;
+        function buildProductOptions(selectedId) {
+            let html = '<option value="">Pilih produk</option>';
+            let currentCategory = '';
+            allProducts.forEach(p => {
+                const catName = p.category?.name || 'Lainnya';
+                if (catName !== currentCategory) {
+                    if (currentCategory) html += '</optgroup>';
+                    html += `<optgroup label="${catName}">`;
+                    currentCategory = catName;
+                }
+                const selected = (p.id == selectedId) ? 'selected' : '';
+                html += `<option value="${p.id}" data-price="${p.price}" data-min="${p.min_order}" ${selected}>${p.name} - Rp ${Number(p.price).toLocaleString('id-ID')}/pcs</option>`;
+            });
+            if (currentCategory) html += '</optgroup>';
+            return html;
         }
 
-        function addItem() {
+        function addItem(productId) {
             const container = document.getElementById('items-container');
             const row = document.createElement('div');
             row.className = 'item-row';
             row.dataset.index = itemIndex++;
+            const idx = row.dataset.index;
+
+            const hasProducts = allProducts.length > 0;
+
             row.innerHTML = `
-                <div class="form-group">
-                    <label>Jenis Lanyard *</label>
-                    <select class="form-select item-name" required onchange="updateSummary()">
-                        <option value="">Pilih jenis</option>
-                        <option value="Lanyard Polyester">Lanyard Polyester</option>
-                        <option value="Lanyard Nylon">Lanyard Nylon</option>
-                        <option value="Lanyard Satin">Lanyard Satin</option>
-                        <option value="Lanyard Tisu">Lanyard Tisu</option>
-                        <option value="Lanyard Printing">Lanyard Printing</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Ukuran</label>
-                    <select class="form-select item-size" onchange="updateSummary()">
-                        <option value="1 cm">1 cm</option>
-                        <option value="1.5 cm" selected>1.5 cm</option>
-                        <option value="2 cm">2 cm</option>
-                        <option value="2.5 cm">2.5 cm</option>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Produk *</label>
+                    <select class="form-select item-product" data-idx="${idx}" required onchange="onProductChange(${idx})">
+                        ${hasProducts ? buildProductOptions(productId) : '<option value="">Memuat produk...</option>'}
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Jumlah (pcs) *</label>
-                    <input type="number" class="form-input item-qty" min="50" value="100" required oninput="updateSummary()">
+                    <input type="number" class="form-input item-qty" data-idx="${idx}" min="50" value="100" required oninput="updateSummary()">
                 </div>
                 <div class="form-group">
                     <label>&nbsp;</label>
-                    <button type="button" class="btn-remove" onclick="removeItem(this)">
+                    <button type="button" class="btn-remove" onclick="removeItem(this)" ${itemIndex <= 1 ? 'style="display:none"' : ''}>
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
             `;
             container.appendChild(row);
             lucide.createIcons();
+            updateSummary();
+        }
+
+        function onProductChange(idx) {
+            const select = document.querySelector(`.item-product[data-idx="${idx}"]`);
+            const qtyInput = document.querySelector(`.item-qty[data-idx="${idx}"]`);
+            if (!select) return;
+
+            const option = select.options[select.selectedIndex];
+            const minOrder = parseInt(option?.dataset?.min) || 50;
+            if (qtyInput && parseInt(qtyInput.value) < minOrder) {
+                qtyInput.value = minOrder;
+                qtyInput.min = minOrder;
+            }
             updateSummary();
         }
 
@@ -472,12 +466,15 @@
             const rows = document.querySelectorAll('.item-row');
             const items = [];
             rows.forEach(row => {
-                const name = row.querySelector('.item-name')?.value;
-                const size = row.querySelector('.item-size')?.value;
-                const qty = parseInt(row.querySelector('.item-qty')?.value) || 0;
-                if (name && qty > 0) {
-                    const price = getPrice(name, size);
-                    items.push({ name, size, qty, price });
+                const select = row.querySelector('.item-product');
+                const qtyInput = row.querySelector('.item-qty');
+                const productId = select?.value;
+                const qty = parseInt(qtyInput?.value) || 0;
+                if (productId && qty > 0) {
+                    const option = select.options[select.selectedIndex];
+                    const price = parseInt(option?.dataset?.price) || 0;
+                    const name = option?.textContent?.split(' - ')[0] || select.value;
+                    items.push({ name, product_id: productId, qty, price, size: '' });
                 }
             });
             return items;
@@ -488,7 +485,7 @@
             const summary = document.getElementById('order-summary');
 
             if (items.length === 0) {
-                summary.innerHTML = '<p style="color:#64748b; font-size:14px;">Pilih item untuk melihat ringkasan</p>';
+                summary.innerHTML = '<p style="color:#64748b; font-size:14px;">Pilih produk untuk melihat ringkasan</p>';
                 return;
             }
 
@@ -498,7 +495,7 @@
                 const subtotal = item.qty * item.price;
                 total += subtotal;
                 html += `<div class="summary-row">
-                    <span>${item.name} (${item.size}) × ${item.qty} pcs</span>
+                    <span>${item.name} × ${item.qty} pcs</span>
                     <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
                 </div>`;
             });
@@ -522,7 +519,7 @@
 
             const items = getItems();
             if (items.length === 0) {
-                alert('Pilih minimal 1 item lanyard');
+                alert('Pilih minimal 1 produk');
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i> Bayar Sekarang';
                 lucide.createIcons();
@@ -579,7 +576,6 @@
                     <p style="font-size:14px; margin-top:12px;"><strong>Total: ${formatRupiah(payment.total_payment)}</strong></p>
                     <p style="font-size:12px; color:#64748b;">Order ID: ${order.order_id}</p>
                 `;
-                // Generate QR
                 setTimeout(() => {
                     QRCode.toCanvas(document.getElementById('qr-canvas'), payment.payment_number, {
                         width: 250,
@@ -595,11 +591,10 @@
                 `;
             }
 
-            // Order detail
             let detailHtml = '';
             order.items.forEach(item => {
                 detailHtml += `<div class="summary-row">
-                    <span>${item.name} (${item.size}) × ${item.qty} pcs</span>
+                    <span>${item.name} × ${item.qty} pcs</span>
                     <span>${formatRupiah(item.qty * item.price)}</span>
                 </div>`;
             });
@@ -607,7 +602,6 @@
             detailHtml += `<div class="summary-row total"><span>Total Bayar</span><span>${formatRupiah(payment.total_payment)}</span></div>`;
             document.getElementById('result-order-detail').innerHTML = detailHtml;
 
-            // Countdown timer
             if (payment.expired_at) {
                 startCountdown(new Date(payment.expired_at), order.order_id);
             }
@@ -631,7 +625,6 @@
                 timerEl.textContent = `Sisa waktu: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }, 1000);
 
-            // Poll payment status every 5 seconds
             const statusInterval = setInterval(async () => {
                 try {
                     const res = await fetch(`${API_URL}/api/orders/${orderId}/status`);
@@ -646,21 +639,9 @@
             }, 5000);
         }
 
-        // Event listeners for live price update
-        document.addEventListener('change', (e) => {
-            if (e.target.classList.contains('item-name') || e.target.classList.contains('item-size')) {
-                updateSummary();
-            }
-        });
-        document.addEventListener('input', (e) => {
-            if (e.target.classList.contains('item-qty')) {
-                updateSummary();
-            }
-        });
-
         // Init
+        loadProducts();
         lucide.createIcons();
-        updateSummary();
     </script>
 </body>
 </html>

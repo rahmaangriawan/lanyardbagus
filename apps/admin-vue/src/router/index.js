@@ -80,6 +80,11 @@ const routes = [
         component: () => import('../views/Media.vue')
       },
       {
+        path: 'catalog',
+        name: 'Catalog',
+        component: () => import('../views/Catalog.vue')
+      },
+      {
         path: 'categories',
         name: 'Categories',
         component: () => import('../views/Categories.vue')

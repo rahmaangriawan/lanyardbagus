@@ -7,6 +7,7 @@
     <title>@yield('title', $settings->site_title ?? 'Lanyardbagus')</title>
     <meta name="description" content="@yield('meta_description', $settings->homepage_meta_description ?? '')">
     <link rel="canonical" href="{{ url()->current() }}">
+    @yield('robots')
     
     <!-- Site Verification Tags -->
     @php

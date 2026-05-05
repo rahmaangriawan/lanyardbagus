@@ -154,6 +154,10 @@ Route::get('/debug-meta', function () {
     return $html;
 });
 
+// Katalog Produk
+Route::get('/katalog', [App\Http\Controllers\ProductController::class, 'katalogIndex']);
+Route::get('/katalog/{slug}', [App\Http\Controllers\ProductController::class, 'katalogCategory']);
+
 // ============================================================
 // BLOG ARCHIVE ROUTES — must come BEFORE /blog/{slug}
 // ============================================================

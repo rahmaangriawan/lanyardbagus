@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomizerController;
 use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\RedirectController;
@@ -110,6 +111,10 @@ Route::post('/orders', [OrderController::class, 'create']);
 Route::get('/orders/{orderId}/status', [OrderController::class, 'status']);
 Route::post('/orders/webhook', [OrderController::class, 'webhook']);
 
+// Public product API
+Route::get('/products', [ProductController::class, 'publicProducts']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
 // Admin (requires authenticated session + admin/editor role)
 Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group(function () {
     Route::get('/me',       [AdminController::class, 'me']);
@@ -171,4 +176,16 @@ Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group
     Route::get('/orders/stats', [OrderController::class, 'stats']);
     Route::patch('/orders/{orderId}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{orderId}/cancel', [OrderController::class, 'cancel']);
+
+    // Product Category CRUD
+    Route::get('/product-categories', [ProductController::class, 'adminCategories']);
+    Route::post('/product-categories', [ProductController::class, 'storeCategory']);
+    Route::put('/product-categories/{id}', [ProductController::class, 'updateCategory']);
+    Route::delete('/product-categories/{id}', [ProductController::class, 'destroyCategory']);
+
+    // Product CRUD
+    Route::get('/products', [ProductController::class, 'adminProducts']);
+    Route::post('/products', [ProductController::class, 'storeProduct']);
+    Route::put('/products/{id}', [ProductController::class, 'updateProduct']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroyProduct']);
 });

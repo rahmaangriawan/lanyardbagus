@@ -35,7 +35,8 @@ import {
   Sparkles,
   Globe,
   Bot,
-  ShoppingCart
+  ShoppingCart,
+  Boxes
 } from 'lucide-vue-next'
 
 const HeaderIcon = (props) => h('svg', { 
@@ -113,7 +114,8 @@ const berandaChildren = computed(() => {
 
 const middleMenus = computed(() => {
   return [
-    { path: '/media', label: 'Media', icon: Image }
+    { path: '/media', label: 'Media', icon: Image },
+    { path: '/catalog', label: 'Katalog', icon: Boxes }
   ]
 })
 const faviconUrl = ref(null)
