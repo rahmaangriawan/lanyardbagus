@@ -99,7 +99,7 @@
                         if (str_starts_with($href, '#')) {
                             $href = '/' . $href;
                         }
-                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']);
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']) || str_contains(strtolower($href), 'produk') || str_contains(strtolower($href), 'katalog') || str_contains(strtolower($href), 'product');
                     @endphp
                     @if($isMega)
                         <div class="mega-menu-wrap relative" onmouseenter="this.querySelector('.mega-dropdown').classList.remove('hidden')" onmouseleave="this.querySelector('.mega-dropdown').classList.add('hidden')">
@@ -215,7 +215,7 @@
                         if (str_starts_with($href, '#')) {
                             $href = '/' . $href;
                         }
-                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']);
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']) || str_contains(strtolower($href), 'produk') || str_contains(strtolower($href), 'katalog') || str_contains(strtolower($href), 'product');
                     @endphp
                     @if($isMega)
                         <details class="group">
