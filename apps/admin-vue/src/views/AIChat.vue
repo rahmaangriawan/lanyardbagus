@@ -2,14 +2,6 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { Button, Card, Input, Label, Badge } from '../components/ui'
-import { Textarea } from '../components/ui/Textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/Select'
 import {
   MessageSquare,
   Settings,
@@ -240,34 +232,30 @@ onMounted(() => {
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label>AI Provider</Label>
-              <Select v-model="aiSettings.provider">
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="openai">OpenAI</SelectItem>
-                  <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                  <SelectItem value="google">Google (Gemini)</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                v-model="aiSettings.provider"
+                class="w-full h-10 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="google">Google (Gemini)</option>
+              </select>
             </div>
 
             <div class="space-y-2">
               <Label>Model</Label>
-              <Select v-model="aiSettings.model">
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="model in providerModels[aiSettings.provider]"
-                    :key="model.value"
-                    :value="model.value"
-                  >
-                    {{ model.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                v-model="aiSettings.model"
+                class="w-full h-10 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option
+                  v-for="model in providerModels[aiSettings.provider]"
+                  :key="model.value"
+                  :value="model.value"
+                >
+                  {{ model.label }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -293,21 +281,23 @@ onMounted(() => {
           <!-- Welcome Message -->
           <div class="space-y-2">
             <Label>Pesan Sambutan</Label>
-            <Textarea
+            <textarea
               v-model="aiSettings.welcome_message"
               rows="2"
               placeholder="Halo! Saya asisten Lanyard Bagus..."
-            />
+              class="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            ></textarea>
           </div>
 
           <!-- System Prompt -->
           <div class="space-y-2">
             <Label>System Prompt (Instruksi AI)</Label>
-            <Textarea
+            <textarea
               v-model="aiSettings.system_prompt"
               rows="8"
               placeholder="Kamu adalah asisten AI untuk..."
-            />
+              class="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-mono text-xs"
+            ></textarea>
             <p class="text-xs text-muted-foreground">
               Instruksi ini akan diberikan ke AI setiap kali chat. Jelaskan tugas, batasan, dan gaya bicara yang diinginkan.
             </p>
