@@ -12,18 +12,18 @@ class ProductController extends Controller
     // ==================== PUBLIC ====================
 
     /**
-     * Show all categories (katalog index)
+     * Show all active products on katalog index
      */
     public function katalogIndex()
     {
-        $categories = ProductCategory::where('is_active', true)
+        $products = Product::with('category')
+            ->where('is_active', true)
             ->orderBy('sort_order')
-            ->withCount(['activeProducts'])
             ->get();
 
         $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
 
-        return view('katalog', compact('categories', 'settings'));
+        return view('katalog', compact('products', 'settings'));
     }
 
     /**
