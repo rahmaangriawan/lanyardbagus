@@ -7,10 +7,18 @@
         $homepageTitle = $settings->homepage_seo_title ?? '';
         $siteTitle = $settings->site_title ?? 'Lanyardbagus';
         $pageTitle = filled($homepageTitle) ? trim($homepageTitle . ' - ' . $siteTitle) : $siteTitle;
+        $gsc = $settings->google_site_verification ?? \App\Models\Setting::get('google_search_console') ?? null;
+        $bing = $settings->bing_site_verification ?? \App\Models\Setting::get('bing_webmaster') ?? null;
     @endphp
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $settings->homepage_meta_description ?? '' }}">
     <link rel="canonical" href="{{ url()->current() }}">
+    @if($gsc)
+    <meta name="google-site-verification" content="{{ $gsc }}">
+    @endif
+    @if($bing)
+    <meta name="msvalidate.01" content="{{ $bing }}">
+    @endif
     @if($settings->faviconImage)
     <link rel="icon" type="image/x-icon" href="{{ $settings->faviconImage->url }}">
     @endif
