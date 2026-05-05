@@ -239,6 +239,59 @@ class ChatController extends Controller
     }
 
     /**
+     * Test current AI provider settings without saving a chat message.
+     */
+    public function testProvider(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider' => ['nullable', 'string', 'in:openai,anthropic,google'],
+            'model' => ['nullable', 'string'],
+            'api_key' => ['nullable', 'string'],
+            'system_prompt' => ['nullable', 'string', 'max:5000'],
+            'message' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key')));
+        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'openai');
+        $provider = $this->resolveProvider($storedProvider, $apiKey);
+        $model = $this->resolveModel($provider, $validated['model'] ?? Setting::get('ai_model'));
+        $systemPrompt = $validated['system_prompt'] ?? Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
+        $testMessage = $validated['message'] ?? 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.';
+
+        if (! $apiKey) {
+            return response()->json([
+                'success' => false,
+                'provider' => $provider,
+                'model' => $model,
+                'error' => 'API key belum disimpan di settings.',
+            ], 422);
+        }
+
+        $messages = [
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user', 'content' => $testMessage],
+        ];
+
+        $response = $this->callAI($provider, $apiKey, $model, $messages);
+
+        if (! $response['success']) {
+            return response()->json([
+                'success' => false,
+                'provider' => $provider,
+                'model' => $model,
+                'error' => $response['error'] ?? 'Unknown provider error',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'provider' => $provider,
+            'model' => $response['model'] ?? $model,
+            'message' => $response['content'],
+        ]);
+    }
+
+    /**
      * Call AI provider API
      */
     private function callAI(string $provider, string $apiKey, string $model, array $messages): array

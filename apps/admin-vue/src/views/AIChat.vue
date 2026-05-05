@@ -19,6 +19,8 @@ const API_URL = 'https://lanyardbagus.com'
 const activeTab = ref('settings')
 const loading = ref(false)
 const saved = ref(false)
+const testing = ref(false)
+const testResult = ref('')
 
 // AI Settings
 const aiSettings = ref({
@@ -54,6 +56,8 @@ const providerModels = {
     { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Hemat)' }
   ],
   google: [
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Recommended)' },
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite (Hemat)' },
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Hemat)' }
   ]
@@ -81,8 +85,11 @@ async function loadAISettings() {
     aiSettings.value = { ...aiSettings.value, ...res.data }
     apiKeySaved.value = !!res.data.has_api_key
     aiSettings.value.api_key = ''
-    if (aiSettings.value.provider === 'openai' && apiKeySaved.value && res.data.model && String(res.data.model).startsWith('gemini-')) {
+    if (String(res.data.model || '').startsWith('gemini-')) {
       aiSettings.value.provider = 'google'
+      if (!String(aiSettings.value.model || '').startsWith('gemini-')) {
+        aiSettings.value.model = 'gemini-2.0-flash'
+      }
     }
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
@@ -127,9 +134,10 @@ async function saveSettings() {
     const apiKey = (aiSettings.value.api_key || '').trim()
     if (apiKey.startsWith('AIza')) {
       aiSettings.value.provider = 'google'
-      if (!String(aiSettings.value.model || '').startsWith('gemini-')) {
-        aiSettings.value.model = 'gemini-2.0-flash'
-      }
+    }
+
+    if (aiSettings.value.provider === 'google' && !String(aiSettings.value.model || '').startsWith('gemini-')) {
+      aiSettings.value.model = 'gemini-2.0-flash'
     }
 
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
@@ -142,6 +150,29 @@ async function saveSettings() {
     alert('Gagal menyimpan pengaturan: ' + (err.response?.data?.message || err.message))
   }
   loading.value = false
+}
+
+async function testProvider() {
+  testing.value = true
+  testResult.value = ''
+
+  try {
+    const payload = {
+      provider: aiSettings.value.provider,
+      model: aiSettings.value.model,
+      api_key: (aiSettings.value.api_key || '').trim() || undefined,
+      system_prompt: aiSettings.value.system_prompt,
+      message: 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.'
+    }
+
+    const res = await axios.post(`${API_URL}/api/admin/chat/test`, payload, { withCredentials: true })
+    testResult.value = `SUCCESS\nProvider: ${res.data.provider}\nModel: ${res.data.model}\nResponse: ${res.data.message}`
+  } catch (err) {
+    const data = err.response?.data
+    testResult.value = `ERROR\nProvider: ${data?.provider || aiSettings.value.provider}\nModel: ${data?.model || aiSettings.value.model}\n${data?.error || err.message}`
+  }
+
+  testing.value = false
 }
 
 async function toggleTraining(messageId, currentStatus) {
@@ -327,10 +358,18 @@ onMounted(() => {
               <Save class="w-4 h-4 mr-2" />
               {{ loading ? 'Menyimpan...' : 'Simpan Pengaturan' }}
             </Button>
+            <Button variant="outline" @click="testProvider" :disabled="testing">
+              <MessageSquare class="w-4 h-4 mr-2" />
+              {{ testing ? 'Menguji...' : 'Test AI' }}
+            </Button>
             <Badge v-if="saved" variant="success" class="bg-green-100 text-green-700">
               <CheckCircle class="w-3 h-3 mr-1" />
               Tersimpan!
             </Badge>
+          </div>
+
+          <div v-if="testResult" class="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap font-mono">
+            {{ testResult }}
           </div>
         </div>
       </Card>
