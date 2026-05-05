@@ -338,6 +338,7 @@
             right: 24px;
             z-index: 9999;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            pointer-events: none;
         }
 
         .chat-toggle-btn {
@@ -354,6 +355,8 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
             transition: all 0.2s ease;
             position: relative;
+            z-index: 2;
+            pointer-events: auto;
         }
 
         .chat-toggle-btn:hover {
@@ -389,8 +392,8 @@
             right: 0;
             width: 380px;
             max-width: calc(100vw - 48px);
-            height: 520px;
-            max-height: calc(100vh - 120px);
+            height: min(520px, calc(100vh - 140px));
+            max-height: calc(100vh - 140px);
             background: white;
             border-radius: 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -399,6 +402,7 @@
             overflow: hidden;
             animation: slideUp 0.25s ease;
             border: 1px solid #e5e7eb;
+            pointer-events: auto;
         }
 
         @keyframes slideUp {
@@ -478,8 +482,16 @@
             background: rgba(255,255,255,0.15);
         }
 
+        #chat-messages-container {
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+        }
+
         .chat-messages {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             padding: 16px;
             display: flex;
@@ -545,9 +557,13 @@
         }
 
         .chat-input-area {
+            flex: 0 0 auto;
             padding: 16px;
             background: white;
             border-top: 1px solid #e5e7eb;
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
         }
 
         .chat-form {
@@ -625,12 +641,11 @@
             .chat-box {
                 width: 100vw;
                 max-width: 100vw;
-                height: 100vh;
-                max-height: 100vh;
+                height: 100dvh;
+                max-height: 100dvh;
                 bottom: 0;
                 right: 0;
                 border-radius: 0;
-                border: none;
                 position: fixed;
             }
 
@@ -805,18 +820,32 @@
                     userFormContainer.style.flexDirection = 'column';
                     messagesContainer.style.display = 'none';
                 }
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            function openChat() {
+                isOpen = true;
+                chatBox.style.display = 'flex';
+
+                showChatView();
+                if (userInfo) {
+                    chatInput.focus();
+                    scrollToBottom();
+                }
+            }
+
+            function closeChat() {
+                isOpen = false;
+                chatBox.style.display = 'none';
             }
 
             function toggleChat() {
-                isOpen = !isOpen;
-                chatBox.style.display = isOpen ? 'flex' : 'none';
-
                 if (isOpen) {
-                    showChatView();
-                    if (userInfo) {
-                        chatInput.focus();
-                        scrollToBottom();
-                    }
+                    closeChat();
+                } else {
+                    openChat();
                 }
             }
 
@@ -905,36 +934,56 @@
                 isTyping = false;
             }
 
-            // Handle user info form submission
-            userForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = document.getElementById('user-name').value.trim();
-                const whatsapp = document.getElementById('user-whatsapp').value.trim();
-
-                if (name && whatsapp) {
-                    userInfo = { name, whatsapp };
-                    localStorage.setItem('chat_user_info', JSON.stringify(userInfo));
-                    showChatView();
-                }
-            });
-
             // Event listeners
-            chatToggle.addEventListener('click', toggleChat);
-            chatClose.addEventListener('click', toggleChat);
-            chatClose2.addEventListener('click', toggleChat);
+            if (chatToggle) {
+                chatToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleChat();
+                });
+            }
+            if (chatClose) {
+                chatClose.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeChat();
+                });
+            }
+            if (chatClose2) {
+                chatClose2.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeChat();
+                });
+            }
 
-            chatForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const message = chatInput.value.trim();
-                if (message) {
-                    sendMessage(message);
-                }
-            });
+            if (chatForm) {
+                chatForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const message = chatInput.value.trim();
+                    if (message) {
+                        sendMessage(message);
+                    }
+                });
+            }
+            if (userForm) {
+                userForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('user-name').value.trim();
+                    const whatsapp = document.getElementById('user-whatsapp').value.trim();
+
+                    if (name && whatsapp) {
+                        userInfo = { name, whatsapp };
+                        localStorage.setItem('chat_user_info', JSON.stringify(userInfo));
+                        showChatView();
+                    }
+                });
+            }
 
             // Close chat when clicking outside
             document.addEventListener('click', (e) => {
-                if (isOpen && !chatBox.contains(e.target) && !chatToggle.contains(e.target)) {
-                    toggleChat();
+                if (isOpen && chatBox && chatToggle && !chatBox.contains(e.target) && !chatToggle.contains(e.target)) {
+                    closeChat();
                 }
             });
 
