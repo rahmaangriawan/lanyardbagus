@@ -10,6 +10,7 @@ use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\TagController;
@@ -135,4 +136,6 @@ Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group
     Route::put('/banners/{id}', [BannerController::class, 'update']);
     Route::delete('/banners/{id}', [BannerController::class, 'destroy']);
     // Route::apiResource('banners', BannerController::class)->except(['index']);
+
+    Route::apiResource('redirects', RedirectController::class);
 });

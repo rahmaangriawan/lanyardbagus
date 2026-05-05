@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { Card, Button, Input, Label } from '../components/ui'
 import MediaPicker from '../components/MediaPicker.vue'
 import { useAuthStore } from '../stores/auth'
-import { Globe, Shield, Cloud, Check, Loader2 } from 'lucide-vue-next'
+import { Globe, Shield, Cloud, Check, Loader2, ArrowLeftRight, Plus, Trash2 } from 'lucide-vue-next'
 import axios from 'axios'
 
 const router = useRouter()
@@ -41,6 +41,10 @@ const r2 = ref({
 const loading = ref(true)
 const saving = ref(false)
 const saved = ref(false)
+
+const redirects = ref([])
+const newRedirect = ref({ from_url: '', to_url: '', status_code: 301, is_active: true })
+const redirectSaving = ref(false)
 
 function normalizeR2Endpoint(value) {
   const trimmed = (value || '').trim()
@@ -95,81 +99,9 @@ async function checkAuth() {
 }
 
 onMounted(async () => {
-  // Check if recently logged in (within last 5 minutes)
-  const lastLogin = localStorage.getItem('lastLoginTime')
-  const recentlyLoggedIn = lastLogin && (Date.now() - parseInt(lastLogin) < 5 * 60 * 1000)
-  
-  // Step 1: Check if session is valid (with retry if not recent login)
-  let isAuth = recentlyLoggedIn ? true : await checkAuth()
-  
-  // If first check fails, wait and retry once
-  if (!isAuth) {
-    console.log('First auth check failed, waiting and retrying...')
-    await new Promise(r => setTimeout(r, 500))
-    isAuth = await checkAuth()
-  }
-  
-  if (!isAuth) {
-    console.log('Not authenticated, redirecting to login...')
-    auth.logout()
-    router.push('/login')
-    return
-  }
-
-  // Step 2: Load site settings first (public endpoint)
-  try {
-    const siteRes = await axios.get(`${API_URL}/api/settings`)
-    settings.value = {
-      site_title: siteRes.data.site_title || '',
-      homepage_seo_title: siteRes.data.homepage_seo_title || '',
-      homepage_meta_description: siteRes.data.homepage_meta_description || '',
-      whatsapp_number: siteRes.data.whatsapp_number || '',
-      logo_image: siteRes.data.logo_image || null,
-      favicon_image: siteRes.data.favicon_image || null
-    }
-    
-    // Load verification from google/bing site verification
-    verification.value = {
-      google_search_console: siteRes.data.google_site_verification || '',
-      google_analytics: '',
-      facebook_domain_verification: '',
-      bing_webmaster: siteRes.data.bing_site_verification || ''
-    }
-  } catch (err) {
-    console.error('Failed to load site settings:', err)
-  }
-  
-  // Step 3: Get CSRF cookie before auth requests
-  await ensureCsrfCookie()
-  
-  // Step 4: Load R2 and system settings (requires auth)
-  try {
-    const systemRes = await axios.get(`${API_URL}/api/admin/system-settings`, { withCredentials: true })
-    const sysData = systemRes.data || {}
-    
-    // Merge verification data from system settings if available
-    if (sysData.google_search_console) verification.value.google_search_console = sysData.google_search_console
-    if (sysData.google_analytics) verification.value.google_analytics = sysData.google_analytics
-    if (sysData.facebook_domain_verification) verification.value.facebook_domain_verification = sysData.facebook_domain_verification
-    if (sysData.bing_webmaster) verification.value.bing_webmaster = sysData.bing_webmaster
-    
-    r2.value = {
-      access_key_id: sysData.r2_access_key_id || '',
-      secret_access_key: '',
-      bucket_name: sysData.r2_bucket_name || '',
-      endpoint: normalizeR2Endpoint(sysData.r2_endpoint || ''),
-      public_url: normalizeR2PublicUrl(sysData.r2_public_url || '')
-    }
-  } catch (err) {
-    if (err.response?.status === 401) {
-      console.log('Session expired - redirecting to login')
-      auth.logout()
-      router.push('/login')
-    } else {
-      console.error('Failed to load system settings:', err)
-    }
-  }
-  
+  loading.value = true
+  await loadSettings()
+  await loadRedirects()
   loading.value = false
 })
 
@@ -249,8 +181,25 @@ async function loadSettings() {
       axios.get(`${API_URL}/api/admin/system-settings`, { withCredentials: true }).catch(() => ({ data: {} }))
     ])
     
+    const siteData = siteRes.data || {}
     const sysData = systemRes.data || {}
-    
+
+    settings.value = {
+      site_title: siteData.site_title || '',
+      homepage_seo_title: siteData.homepage_seo_title || '',
+      homepage_meta_description: siteData.homepage_meta_description || '',
+      whatsapp_number: siteData.whatsapp_number || '',
+      logo_image: siteData.logo_image || null,
+      favicon_image: siteData.favicon_image || null,
+    }
+
+    verification.value = {
+      google_search_console: siteData.google_site_verification || sysData.google_search_console || '',
+      google_analytics: sysData.google_analytics || '',
+      facebook_domain_verification: sysData.facebook_domain_verification || '',
+      bing_webmaster: siteData.bing_site_verification || sysData.bing_webmaster || '',
+    }
+
     r2.value = {
       access_key_id: sysData.r2_access_key_id || r2.value.access_key_id,
       secret_access_key: '',
@@ -260,6 +209,50 @@ async function loadSettings() {
     }
   } catch (err) {
     console.error('Failed to reload settings:', err)
+  }
+}
+
+async function loadRedirects() {
+  try {
+    const res = await axios.get(`${API_URL}/api/admin/redirects`, { withCredentials: true })
+    redirects.value = res.data
+  } catch (err) {
+    console.error('Failed to load redirects:', err)
+  }
+}
+
+async function addRedirect() {
+  if (!newRedirect.value.from_url || !newRedirect.value.to_url) return
+  redirectSaving.value = true
+  try {
+    await axios.post(`${API_URL}/api/admin/redirects`, newRedirect.value, { withCredentials: true })
+    newRedirect.value = { from_url: '', to_url: '', status_code: 301, is_active: true }
+    await loadRedirects()
+  } catch (err) {
+    console.error('Failed to add redirect:', err)
+  } finally {
+    redirectSaving.value = false
+  }
+}
+
+async function toggleRedirect(redirect) {
+  try {
+    await axios.put(`${API_URL}/api/admin/redirects/${redirect.id}`, {
+      is_active: redirect.is_active
+    }, { withCredentials: true })
+  } catch (err) {
+    console.error('Failed to toggle redirect:', err)
+    redirect.is_active = !redirect.is_active
+  }
+}
+
+async function deleteRedirect(redirect) {
+  if (!confirm('Hapus redirect ini?')) return
+  try {
+    await axios.delete(`${API_URL}/api/admin/redirects/${redirect.id}`, { withCredentials: true })
+    await loadRedirects()
+  } catch (err) {
+    console.error('Failed to delete redirect:', err)
   }
 }
 </script>
@@ -293,6 +286,14 @@ async function loadSettings() {
       >
         <Cloud class="w-4 h-4" />
         R2 Cloudflare
+      </button>
+      <button 
+        @click="activeTab = 'redirects'"
+        :class="['flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors', 
+          activeTab === 'redirects' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground']"
+      >
+        <ArrowLeftRight class="w-4 h-4" />
+        Redirects
       </button>
     </div>
     
@@ -399,8 +400,89 @@ async function loadSettings() {
           <p class="text-xs text-muted-foreground">URL publik untuk mengakses file (optional)</p>
         </div>
       </div>
+
+      <!-- Redirects Tab -->
+      <div v-if="activeTab === 'redirects'" class="space-y-6">
+        <div class="p-4 bg-secondary/50 rounded-lg">
+          <p class="text-sm text-muted-foreground">
+            Kelola redirect 301/302. URL yang tidak ditemukan (404) akan dicek di sini sebelum menampilkan halaman error.
+          </p>
+        </div>
+
+        <!-- Add new redirect form -->
+        <div class="border rounded-lg p-4 space-y-4">
+          <p class="text-sm font-medium">Tambah Redirect Baru</p>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="space-y-1">
+              <Label>URL Asal (From)</Label>
+              <Input v-model="newRedirect.from_url" placeholder="/url-lama" />
+            </div>
+            <div class="space-y-1">
+              <Label>URL Tujuan (To)</Label>
+              <Input v-model="newRedirect.to_url" placeholder="/url-baru atau https://..." />
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="space-y-1">
+              <Label>Status Code</Label>
+              <select v-model="newRedirect.status_code" class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <option :value="301">301 – Permanent</option>
+                <option :value="302">302 – Temporary</option>
+                <option :value="307">307 – Temporary (method preserved)</option>
+                <option :value="308">308 – Permanent (method preserved)</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2 mt-5">
+              <input type="checkbox" id="new-active" v-model="newRedirect.is_active" class="rounded border-input" />
+              <label for="new-active" class="text-sm">Aktif</label>
+            </div>
+          </div>
+          <Button @click="addRedirect" :disabled="redirectSaving || !newRedirect.from_url || !newRedirect.to_url" variant="default" size="sm">
+            <Loader2 v-if="redirectSaving" class="w-4 h-4 mr-2 animate-spin" />
+            <Plus v-else class="w-4 h-4 mr-2" />
+            Tambah Redirect
+          </Button>
+        </div>
+
+        <!-- Redirect list -->
+        <div v-if="redirects.length === 0" class="text-center py-8 text-muted-foreground text-sm">
+          Belum ada redirect. Tambahkan redirect pertama di atas.
+        </div>
+        <div v-else class="border rounded-lg overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-secondary/50">
+              <tr>
+                <th class="text-left px-4 py-2 font-medium">From</th>
+                <th class="text-left px-4 py-2 font-medium">To</th>
+                <th class="text-center px-4 py-2 font-medium">Code</th>
+                <th class="text-center px-4 py-2 font-medium">Aktif</th>
+                <th class="px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr v-for="r in redirects" :key="r.id" class="hover:bg-secondary/20">
+                <td class="px-4 py-2 font-mono text-xs truncate max-w-[180px]">{{ r.from_url }}</td>
+                <td class="px-4 py-2 font-mono text-xs truncate max-w-[180px]">{{ r.to_url }}</td>
+                <td class="px-4 py-2 text-center">
+                  <span class="inline-block px-2 py-0.5 rounded text-xs font-medium" :class="r.status_code === 301 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'">
+                    {{ r.status_code }}
+                  </span>
+                </td>
+                <td class="px-4 py-2 text-center">
+                  <input type="checkbox" v-model="r.is_active" @change="toggleRedirect(r)" class="rounded border-input cursor-pointer" />
+                </td>
+                <td class="px-4 py-2 text-right">
+                  <button @click="deleteRedirect(r)" class="text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       
-      <div class="flex items-center gap-4 pt-6 mt-6 border-t">
+      <div class="flex items-center gap-4 pt-6 mt-6 border-t" v-if="activeTab !== 'redirects'">
         <Button @click="saveSettings" :disabled="saving" variant="default">
           <Loader2 v-if="saving" class="w-4 h-4 mr-2 animate-spin" />
           <Check v-else-if="saved" class="w-4 h-4 mr-2" />

@@ -301,3 +301,20 @@ Route::get('/blog/{slug}', function ($slug) {
 
     return view('post', compact('settings', 'post'));
 });
+
+// ============================================================
+// 404 FALLBACK — Check redirects before showing 404
+// ============================================================
+Route::fallback(function (\Illuminate\Http\Request $request) {
+    $path = '/' . ltrim($request->path(), '/');
+
+    $redirect = \App\Models\Redirect::where('from_url', $path)
+        ->where('is_active', true)
+        ->first();
+
+    if ($redirect) {
+        return redirect($redirect->to_url, $redirect->status_code);
+    }
+
+    abort(404);
+});
