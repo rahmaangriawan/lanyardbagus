@@ -8,13 +8,12 @@
              'bg-red-50 border-red-200 text-red-800': t.type==='error',
              'bg-blue-50 border-blue-200 text-blue-800': t.type==='info',
            }">
-        {{ t.message }}
-
-function firstImageUrl(imagesCsv) {
-  if (!imagesCsv) return ''
-  const first = imagesCsv.split(',').map(s => s.trim()).filter(Boolean)[0]
-  return first || ''
-}
+        <div class="flex items-start gap-2">
+          <span v-if="t.type==='success'" class="text-green-500 mt-0.5">✓</span>
+          <span v-if="t.type==='error'" class="text-red-500 mt-0.5">✕</span>
+          <span v-if="t.type==='info'" class="text-blue-500 mt-0.5">ℹ</span>
+          <span class="leading-snug">{{ t.message }}</span>
+        </div>
       </div>
     </div>
     <div class="flex items-center justify-between">
@@ -64,8 +63,12 @@ function firstImageUrl(imagesCsv) {
               <td class="p-3">{{ c.is_active ? 'Ya' : 'Tidak' }}</td>
               <td class="p-3 text-right">{{ c.sort_order }}</td>
               <td class="p-3 text-center space-x-2">
-                <button class="px-2 py-1 text-xs border rounded" @click="editCategory(c)">Edit</button>
-                <button class="px-2 py-1 text-xs border rounded text-red-600" @click="deleteCategory(c)">Hapus</button>
+                <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit" @click="editCategory(c)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM16.862 4.487L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                </button>
+                <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Hapus" @click="deleteCategory(c)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                </button>
               </td>
             </tr>
             <tr v-if="categories.length === 0">
@@ -137,9 +140,15 @@ function firstImageUrl(imagesCsv) {
               <td class="p-3 text-right">{{ p.min_order }}</td>
               <td class="p-3 text-right">{{ p.sort_order }}</td>
               <td class="p-3 text-center space-x-2">
-                <button class="px-2 py-1 text-xs border rounded" @click="startEditProduct(p)">Edit</button>
-                <button class="px-2 py-1 text-xs border rounded" @click="copyOrderLink(p)">Copy Order Link</button>
-                <button class="px-2 py-1 text-xs border rounded text-red-600" @click="deleteProduct(p)">Hapus</button>
+                <button class="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit" @click="startEditProduct(p)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM16.862 4.487L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                </button>
+                <button class="p-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors" title="Copy Order Link" @click="copyOrderLink(p)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612a2.25 2.25 0 01-.659 1.591l-5.411 5.411a2.25 2.25 0 01-1.591.659H6.75a2.25 2.25 0 00-2.25 2.25v3c0 1.012.33 1.945.889 2.7m13.112-13.11c.555.76.864 1.685.864 2.632 0 1.218-.47 2.36-1.317 3.216l-5.412 5.412a4.5 4.5 0 01-3.192 1.318H8.25a2.25 2.25 0 00-2.25 2.25v3c0 1.012.33 1.945.889 2.7m0 0a21.75 21.75 0 0115.334 0M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+                <button class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Hapus" @click="deleteProduct(p)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                </button>
               </td>
             </tr>
             <tr v-if="products.length === 0">
