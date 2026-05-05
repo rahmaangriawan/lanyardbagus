@@ -152,33 +152,51 @@ class PageCrawlerService
     }
 
     /**
-     * Get all training data for AI context
+     * Get all training data for AI context (limited size)
      */
     public function getTrainingData(): array
     {
         $trainingData = ChatMessage::where('is_training_data', true)
             ->orderBy('created_at', 'desc')
+            ->limit(5) // Limit to 5 most recent entries
             ->get(['message', 'metadata'])
             ->toArray();
 
         $context = '';
+        $totalChars = 0;
+        $maxChars = 3000; // Limit context to ~3000 characters to stay within token limits
+
         foreach ($trainingData as $data) {
             $url = $data['metadata']['url'] ?? 'Unknown';
             $title = $data['metadata']['title'] ?? '';
             $content = $data['message'] ?? '';
             
+            // Limit each entry to 500 chars
+            if (strlen($content) > 500) {
+                $content = substr($content, 0, 500) . '...';
+            }
+            
             if (!empty($content)) {
-                $context .= "Source: {$url}\n";
+                $entry = "Source: {$url}\n";
                 if ($title) {
-                    $context .= "Title: {$title}\n";
+                    $entry .= "Title: {$title}\n";
                 }
-                $context .= "Content: {$content}\n\n";
+                $entry .= "Content: {$content}\n\n";
+                
+                // Check if adding this entry would exceed max
+                if ($totalChars + strlen($entry) > $maxChars) {
+                    break;
+                }
+                
+                $context .= $entry;
+                $totalChars += strlen($entry);
             }
         }
 
         return [
             'context' => $context,
             'count' => count($trainingData),
+            'chars' => $totalChars,
         ];
     }
 
