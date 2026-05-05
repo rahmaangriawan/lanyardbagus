@@ -15,7 +15,7 @@ class ChatController extends Controller
      */
     public function history(Request $request): JsonResponse
     {
-        $sessionId = $request->header('X-Session-ID') || $request->input('session_id');
+        $sessionId = $request->header('X-Session-ID') ?: $request->input('session_id');
         
         if (!$sessionId) {
             return response()->json(['messages' => []]);

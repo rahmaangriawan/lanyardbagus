@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/customizer/upload',
             'api/customizer/leads',
+            'api/chat/send',
             'api/admin/banners',
             'api/admin/banners/*',
             'api/auth/login',
