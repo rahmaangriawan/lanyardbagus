@@ -249,6 +249,11 @@ Route::get('/kebijakan', function () {
     return view('kebijakan', compact('settings'));
 });
 
+// Order / Payment Page
+Route::get('/order', function () {
+    return view('order');
+});
+
 // Blog Archive by Tag
 Route::get('/blog/tag/{slug}', function ($slug) {
     $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();

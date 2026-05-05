@@ -9,6 +9,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CustomizerController;
 use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\RedirectController;
@@ -104,6 +105,11 @@ Route::post('/chat/send', [ChatController::class, 'send']);
 Route::get('/chat/history', [ChatController::class, 'history']);
 Route::get('/chat/settings', [ChatController::class, 'getSettings']);
 
+// Public order API
+Route::post('/orders', [OrderController::class, 'create']);
+Route::get('/orders/{orderId}/status', [OrderController::class, 'status']);
+Route::post('/orders/webhook', [OrderController::class, 'webhook']);
+
 // Admin (requires authenticated session + admin/editor role)
 Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group(function () {
     Route::get('/me',       [AdminController::class, 'me']);
@@ -159,4 +165,10 @@ Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group
     Route::post('/chat/crawl', [ChatController::class, 'crawlPage']);
     Route::get('/chat/crawl/training-data', [ChatController::class, 'getCrawledTrainingData']);
     Route::delete('/chat/crawl/{url}', [ChatController::class, 'deleteCrawledData']);
+
+    // Order Management
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/stats', [OrderController::class, 'stats']);
+    Route::patch('/orders/{orderId}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{orderId}/cancel', [OrderController::class, 'cancel']);
 });

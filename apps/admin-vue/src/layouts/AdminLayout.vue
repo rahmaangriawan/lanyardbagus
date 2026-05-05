@@ -34,7 +34,8 @@ import {
   Folder,
   Sparkles,
   Globe,
-  Bot
+  Bot,
+  ShoppingCart
 } from 'lucide-vue-next'
 
 const HeaderIcon = (props) => h('svg', { 
@@ -206,6 +207,7 @@ const berandaMenu = {
 }
 
 const leadsMenu = { path: '/leads', label: 'Leads', icon: Inbox }
+const ordersMenu = { path: '/orders', label: 'Orders', icon: ShoppingCart }
 
 // Lainnya section
 const lainnyaLabel = 'Lainnya'
@@ -409,6 +411,23 @@ onMounted(() => {
               <router-link :to="leadsMenu.path" class="flex items-center gap-2.5">
                 <component :is="leadsMenu.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 <span v-show="!collapsed" class="text-[13px]">{{ leadsMenu.label }}</span>
+              </router-link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </div>
+
+        <!-- Orders -->
+        <div class="px-3 mt-1">
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              :isActive="isActive(ordersMenu.path)"
+              asChild
+              class="w-full"
+              :class="collapsed ? 'justify-center' : ''"
+            >
+              <router-link :to="ordersMenu.path" class="flex items-center gap-2.5">
+                <component :is="ordersMenu.icon" class="w-[18px] h-[18px] flex-shrink-0" />
+                <span v-show="!collapsed" class="text-[13px]">{{ ordersMenu.label }}</span>
               </router-link>
             </SidebarMenuButton>
           </SidebarMenuItem>
