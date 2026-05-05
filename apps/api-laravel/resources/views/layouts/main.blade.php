@@ -141,6 +141,13 @@
         $megaCategories = \App\Models\ProductCategory::where('is_active', true)
             ->orderBy('sort_order')
             ->get(['id', 'slug', 'name', 'image']);
+
+        // Load featured products for mega menu (max 4, with category for fallback image)
+        $megaFeaturedProducts = \App\Models\Product::with('category')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->limit(4)
+            ->get(['id', 'name', 'price', 'images', 'category_id']);
     @endphp
 
     <!-- Global Top Navigation -->
@@ -222,45 +229,33 @@
                                         <!-- Divider -->
                                         <div class="w-px bg-cb-hairline self-stretch"></div>
                                         <!-- Featured -->
-                                        <div class="w-44 shrink-0">
+                                        <div class="w-48 shrink-0">
                                             <h4 class="text-xs font-semibold text-cb-muted uppercase tracking-wider mb-3">Unggulan</h4>
                                             <div class="space-y-1">
-                                                <a href="/order?product_id=1" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-blue/10 flex items-center justify-center text-cb-blue shrink-0">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Lanyard Custom</p>
-                                                        <p class="text-[11px] text-cb-muted">Rp 10.000/pcs</p>
-                                                    </div>
-                                                </a>
-                                                <a href="/order?product_id=2" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-accent-yellow/10 flex items-center justify-center text-cb-accent-yellow shrink-0">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Wristband</p>
-                                                        <p class="text-[11px] text-cb-muted">Rp 8.000/pcs</p>
-                                                    </div>
-                                                </a>
-                                                <a href="/order?product_id=4" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-semantic-up/10 flex items-center justify-center text-cb-semantic-up shrink-0">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-xs font-medium text-cb-ink leading-tight">ID Card PVC</p>
-                                                        <p class="text-[11px] text-cb-muted">Rp 15.000/pcs</p>
-                                                    </div>
-                                                </a>
-                                                <a href="/order?product_id=3" class="flex items-center gap-2.5 py-2 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors">
-                                                    <div class="w-8 h-8 rounded-cb-xs bg-cb-surface-strong flex items-center justify-center text-cb-muted shrink-0">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.562-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1.001.43-1.563A6 6 0 1121.75 8.25z"/></svg>
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-xs font-medium text-cb-ink leading-tight">Keychain</p>
-                                                        <p class="text-[11px] text-cb-muted">Rp 7.000/pcs</p>
-                                                    </div>
-                                                </a>
+                                                @foreach($megaFeaturedProducts as $fp)
+                                                    @php
+                                                        // Use product's own image, fallback to category image
+                                                        $fpImg = (is_array($fp->images) && count($fp->images) > 0)
+                                                            ? $fp->images[0]
+                                                            : ($fp->category?->image ?? null);
+                                                        $fpPrice = 'Rp ' . number_format($fp->price, 0, ',', '.');
+                                                    @endphp
+                                                    <a href="/order?product_id={{ $fp->id }}" class="flex items-center gap-2.5 py-1.5 px-2 rounded-cb-sm hover:bg-cb-surface-soft transition-colors group/fp">
+                                                        <div class="w-10 h-10 rounded-cb-sm overflow-hidden shrink-0 bg-cb-surface-soft">
+                                                            @if($fpImg)
+                                                                <img src="{{ $fpImg }}" alt="{{ $fp->name }}" class="w-full h-full object-cover group-hover/fp:scale-105 transition-transform duration-200">
+                                                            @else
+                                                                <div class="w-full h-full flex items-center justify-center text-cb-muted-soft">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <p class="text-xs font-medium text-cb-ink leading-tight truncate group-hover/fp:text-cb-blue transition-colors">{{ $fp->name }}</p>
+                                                            <p class="text-[11px] text-cb-muted">{{ $fpPrice }}/pcs</p>
+                                                        </div>
+                                                    </a>
+                                                @endforeach
                                             </div>
                                         </div>
                                     </div>
