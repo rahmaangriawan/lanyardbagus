@@ -1812,31 +1812,38 @@
                 isTyping = false;
             }
 
-            // Handle user info form submission
-            userForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = document.getElementById('user-name').value.trim();
-                const whatsapp = document.getElementById('user-whatsapp').value.trim();
-
-                if (name && whatsapp) {
-                    userInfo = { name, whatsapp };
-                    localStorage.setItem('chat_user_info', JSON.stringify(userInfo));
-                    showChatView();
-                }
-            });
-
             // Event listeners
-            chatToggle.addEventListener('click', toggleChat);
-            chatClose.addEventListener('click', toggleChat);
-            chatClose2.addEventListener('click', toggleChat);
+            if (chatToggle) {
+                chatToggle.addEventListener('click', toggleChat);
+            }
+            if (chatClose) {
+                chatClose.addEventListener('click', toggleChat);
+            }
+            if (chatClose2) {
+                chatClose2.addEventListener('click', toggleChat);
+            }
+            if (chatForm) {
+                chatForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const message = chatInput.value.trim();
+                    if (message) {
+                        sendMessage(message);
+                    }
+                });
+            }
+            if (userForm) {
+                userForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('user-name').value.trim();
+                    const whatsapp = document.getElementById('user-whatsapp').value.trim();
 
-            chatForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const message = chatInput.value.trim();
-                if (message) {
-                    sendMessage(message);
-                }
-            });
+                    if (name && whatsapp) {
+                        userInfo = { name, whatsapp };
+                        localStorage.setItem('chat_user_info', JSON.stringify(userInfo));
+                        showChatView();
+                    }
+                });
+            }
 
             // Close chat when clicking outside
             document.addEventListener('click', (e) => {
