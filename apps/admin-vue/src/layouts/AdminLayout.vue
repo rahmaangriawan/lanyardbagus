@@ -456,7 +456,18 @@ onMounted(() => {
       <!-- Top Bar -->
       <header class="h-14 bg-card border-b flex items-center justify-between px-6 sticky top-0 z-20">
         <h2 class="text-lg font-semibold">{{ route.name }}</h2>
-        <router-link to="/profile" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div class="flex items-center gap-4">
+          <!-- View Web Button -->
+          <a
+            :href="API_URL"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Globe class="w-4 h-4" />
+            <span>Lihat Website</span>
+          </a>
+          <router-link to="/profile" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <span class="text-sm text-muted-foreground">
             Hi, <span class="font-medium text-foreground">{{ user?.name || 'admin' }}</span>
           </span>
@@ -464,6 +475,7 @@ onMounted(() => {
             <User class="w-4 h-4 text-muted-foreground" />
           </div>
         </router-link>
+        </div>
       </header>
       
       <main class="flex-1 p-6 overflow-auto">
