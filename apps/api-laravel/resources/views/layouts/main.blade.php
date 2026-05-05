@@ -97,7 +97,7 @@
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(10,11,13,0.10), 0 2px 8px rgba(10,11,13,0.06);
             padding: 16px;
-            width: 480px;
+            width: 460px;
             max-width: calc(100vw - 48px);
         }
 
