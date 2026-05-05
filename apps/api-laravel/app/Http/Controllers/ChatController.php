@@ -348,7 +348,9 @@ class ChatController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
 
-                $text = data_get($data, 'choices.0.message.content');
+                $text = data_get($data, 'choices.0.message.content')
+                    ?? data_get($data, 'choices.0.text')
+                    ?? data_get($data, 'choices.0.message');
                 if (filled($text)) {
                     return [
                         'success' => true,
@@ -358,14 +360,79 @@ class ChatController extends Controller
                     ];
                 }
 
-                $lastError = 'Gemini response missing text payload for model ' . $candidateModel;
+                $lastError = 'Gemini OpenAI-compatible response missing text payload for model ' . $candidateModel;
+            } else {
+                $lastError = 'OpenAI-compatible Gemini model ' . $candidateModel . ' failed: ' . $response->status() . ' ' . $response->body();
+            }
+
+            $nativeResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$candidateModel}:generateContent?key={$apiKey}", [
+                'systemInstruction' => [
+                    'parts' => [
+                        ['text' => $this->extractSystemPrompt($messages)],
+                    ],
+                ],
+                'contents' => $this->convertMessagesToGoogleContents($messages),
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 1000,
+                ],
+            ]);
+
+            if ($nativeResponse->successful()) {
+                $nativeData = $nativeResponse->json();
+                $nativeText = data_get($nativeData, 'candidates.0.content.parts.0.text');
+
+                if (filled($nativeText)) {
+                    return [
+                        'success' => true,
+                        'content' => $nativeText,
+                        'tokens' => null,
+                        'model' => $candidateModel,
+                    ];
+                }
+
+                $lastError = 'Gemini native response missing text payload for model ' . $candidateModel;
                 continue;
             }
 
-            $lastError = 'Model ' . $candidateModel . ' failed: ' . $response->status() . ' ' . $response->body();
+            $lastError = trim($lastError . ' | Native REST fallback: ' . $nativeResponse->status() . ' ' . $nativeResponse->body());
         }
 
         return ['success' => false, 'error' => $lastError ?: 'Unknown Gemini error'];
+    }
+
+    private function extractSystemPrompt(array $messages): string
+    {
+        foreach ($messages as $message) {
+            if (($message['role'] ?? null) === 'system') {
+                return (string) ($message['content'] ?? '');
+            }
+        }
+
+        return '';
+    }
+
+    private function convertMessagesToGoogleContents(array $messages): array
+    {
+        $contents = [];
+
+        foreach ($messages as $message) {
+            if (($message['role'] ?? null) === 'system') {
+                continue;
+            }
+
+            $role = ($message['role'] ?? 'user') === 'assistant' ? 'model' : 'user';
+            $contents[] = [
+                'role' => $role,
+                'parts' => [
+                    ['text' => (string) ($message['content'] ?? '')],
+                ],
+            ];
+        }
+
+        return $contents;
     }
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
