@@ -43,7 +43,8 @@ class ChatController extends Controller
 
         // Get AI settings
         $apiKey = Setting::get('ai_api_key');
-        $model = Setting::get('ai_model', 'gpt-4o-mini');
+        $provider = $this->resolveProvider(Setting::get('ai_provider', 'openai'), $apiKey);
+        $model = Setting::get('ai_model', $provider === 'google' ? 'gemini-1.5-flash' : 'gpt-4o-mini');
         $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
         $enabled = Setting::get('ai_enabled', 'true');
 
@@ -76,12 +77,17 @@ class ChatController extends Controller
         $messages[] = ['role' => 'user', 'content' => $validated['message']];
 
         // Call AI API (OpenAI compatible)
-        $provider = Setting::get('ai_provider', 'openai');
         $response = $this->callAI($provider, $apiKey, $model, $messages);
 
         if (!$response['success']) {
+            \Log::warning('AI chat provider request failed', [
+                'provider' => $provider,
+                'model' => $model,
+                'error' => $response['error'] ?? null,
+            ]);
+
             return response()->json([
-                'message' => 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.'
+                'message' => 'Maaf, layanan AI sedang bermasalah. Periksa provider/model/API key di menu AI Chat.'
             ], 500);
         }
 
@@ -176,7 +182,8 @@ class ChatController extends Controller
             'enabled' => Setting::get('ai_enabled', 'true') === 'true',
             'provider' => Setting::get('ai_provider', 'openai'),
             'model' => Setting::get('ai_model', 'gpt-4o-mini'),
-            'api_key' => Setting::get('ai_api_key') ? '***' : '',
+            'api_key' => '',
+            'has_api_key' => (bool) Setting::get('ai_api_key'),
             'system_prompt' => Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt()),
             'welcome_message' => Setting::get('ai_welcome_message', $this->getDefaultWelcomeMessage()),
             'widget_title' => Setting::get('ai_widget_title', 'Asisten Lanyard Bagus'),
@@ -325,6 +332,23 @@ class ChatController extends Controller
         }
 
         return ['success' => false, 'error' => $response->body()];
+    }
+
+    private function resolveProvider(string $storedProvider, ?string $apiKey): string
+    {
+        $apiKey = trim((string) $apiKey);
+
+        if (str_starts_with($apiKey, 'AIza')) {
+            return 'google';
+        }
+
+        if (str_starts_with($apiKey, 'sk-') || str_starts_with($apiKey, 'gsk-')) {
+            return 'openai';
+        }
+
+        return in_array($storedProvider, ['openai', 'anthropic', 'google'], true)
+            ? $storedProvider
+            : 'openai';
     }
 
     private function getDefaultSystemPrompt(): string

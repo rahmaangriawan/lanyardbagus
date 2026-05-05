@@ -31,6 +31,8 @@ const aiSettings = ref({
   widget_title: 'Asisten Lanyard Bagus'
 })
 
+const apiKeySaved = ref(false)
+
 // Chat Sessions
 const sessions = ref([])
 const selectedSession = ref(null)
@@ -77,6 +79,8 @@ async function loadAISettings() {
   try {
     const res = await axios.get(`${API_URL}/api/admin/chat/settings`, { withCredentials: true })
     aiSettings.value = { ...aiSettings.value, ...res.data }
+    apiKeySaved.value = !!res.data.has_api_key
+    aiSettings.value.api_key = ''
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
   } catch (err) {
@@ -118,6 +122,8 @@ async function saveSettings() {
   loading.value = true
   try {
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
+    apiKeySaved.value = apiKeySaved.value || !!aiSettings.value.api_key
+    aiSettings.value.api_key = ''
     saved.value = true
     setTimeout(() => saved.value = false, 3000)
   } catch (err) {
@@ -265,11 +271,12 @@ onMounted(() => {
             <Input
               v-model="aiSettings.api_key"
               type="password"
-              placeholder="sk-... atau ant-..."
+              placeholder="Masukkan API key baru jika ingin mengganti"
             />
-            <p class="text-xs text-muted-foreground">
-              API Key dari provider yang dipilih. Biarkan kosong jika tidak ingin mengubah.
-            </p>
+            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>API Key dari provider yang dipilih. Biarkan kosong jika tidak ingin mengubah.</span>
+              <Badge v-if="apiKeySaved" variant="outline" class="text-[10px] uppercase tracking-wide">Tersimpan</Badge>
+            </div>
           </div>
 
           <!-- Widget Title -->
