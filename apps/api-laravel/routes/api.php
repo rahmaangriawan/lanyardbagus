@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CustomizerController;
 use App\Http\Controllers\HomepageController;
@@ -98,6 +99,11 @@ Route::post('/posts/{slug}/comments', [CommentController::class, 'publicStore'])
 Route::post('/customizer/upload', [CustomizerController::class, 'upload']);
 Route::post('/customizer/leads',  [CustomizerController::class, 'storeLead']);
 
+// Public chat API
+Route::post('/chat/send', [ChatController::class, 'send']);
+Route::get('/chat/history', [ChatController::class, 'history']);
+Route::get('/chat/settings', [ChatController::class, 'getSettings']);
+
 // Admin (requires authenticated session + admin/editor role)
 Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group(function () {
     Route::get('/me',       [AdminController::class, 'me']);
@@ -138,4 +144,13 @@ Route::middleware(['auth:sanctum', RequireAdmin::class])->prefix('admin')->group
     // Route::apiResource('banners', BannerController::class)->except(['index']);
 
     Route::apiResource('redirects', RedirectController::class);
+
+    // AI Chat Management
+    Route::get('/chat/sessions', [ChatController::class, 'sessions']);
+    Route::get('/chat/sessions/{sessionId}', [ChatController::class, 'sessionMessages']);
+    Route::get('/chat/training-data', [ChatController::class, 'trainingData']);
+    Route::patch('/chat/messages/{message}/training', [ChatController::class, 'markTraining']);
+    Route::delete('/chat/messages/{message}', [ChatController::class, 'destroy']);
+    Route::get('/chat/settings', [ChatController::class, 'getSettings']);
+    Route::put('/chat/settings', [ChatController::class, 'updateSettings']);
 });

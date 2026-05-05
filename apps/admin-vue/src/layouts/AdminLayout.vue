@@ -14,11 +14,11 @@ import {
   Button
 } from '../components/ui'
 import {
-  LayoutDashboard, 
+  LayoutDashboard,
   Home,
-  FileText, 
-  FileStack, 
-  Image, 
+  FileText,
+  FileStack,
+  Image,
   Settings,
   LogOut,
   User,
@@ -33,7 +33,8 @@ import {
   Layout,
   Folder,
   Sparkles,
-  Globe
+  Globe,
+  Bot
 } from 'lucide-vue-next'
 
 const HeaderIcon = (props) => h('svg', { 
@@ -131,7 +132,8 @@ const pageTitles = {
   'Media': 'Media',
   'Leads': 'Leads',
   'Users': 'Pengguna',
-  'Settings': 'Pengaturan'
+  'Settings': 'Pengaturan',
+  'AIChat': 'AI Chat Assistant'
 }
 
 // Load settings and update title/favicon
@@ -209,12 +211,13 @@ const leadsMenu = { path: '/leads', label: 'Leads', icon: Inbox }
 const lainnyaLabel = 'Lainnya'
 const lainnyaMenus = computed(() => {
   const all = [
-    { path: '/profile', label: 'Profil Saya', icon: User },
+    { path: '/ai-chat', label: 'AI Chat', icon: Bot },
     { path: '/settings', label: 'Pengaturan', icon: Settings },
     { path: '/users', label: 'Kelola User', icon: Users },
+    { path: '/profile', label: 'Profil Saya', icon: User },
   ]
   if (!isAdmin.value) {
-    return all.filter(item => item.path !== '/users')
+    return all.filter(item => !['/users', '/ai-chat'].includes(item.path))
   }
   return all
 })

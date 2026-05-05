@@ -105,6 +105,11 @@ const routes = [
         component: () => import('../views/Leads.vue')
       },
       {
+        path: 'ai-chat',
+        name: 'AIChat',
+        component: () => import('../views/AIChat.vue')
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('../views/Profile.vue')
