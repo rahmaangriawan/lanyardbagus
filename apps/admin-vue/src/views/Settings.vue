@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Card, Button, Input, Label } from '../components/ui'
+import { Card, Button, Input, Label, Alert, AlertTitle, AlertDescription } from '../components/ui'
 import MediaPicker from '../components/MediaPicker.vue'
 import { useAuthStore } from '../stores/auth'
-import { Globe, Shield, Cloud, Check, Loader2, ArrowLeftRight, Plus, Trash2 } from 'lucide-vue-next'
+import { Globe, Shield, Cloud, Check, Loader2, ArrowLeftRight, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 
 const router = useRouter()
@@ -41,6 +41,7 @@ const r2 = ref({
 const loading = ref(true)
 const saving = ref(false)
 const saved = ref(false)
+const saveStatus = ref(null)
 
 const redirects = ref([])
 const newRedirect = ref({ from_url: '', to_url: '', status_code: 301, is_active: true })
@@ -150,9 +151,9 @@ async function saveSettings() {
     await axios.put(`${API_URL}/api/admin/system-settings`, { settings: systemSettings }, { withCredentials: true })
     console.log('System settings saved')
     
-    saved.value = true
+    saveStatus.value = { type: 'success', message: 'Pengaturan berhasil disimpan!' }
     r2.value.secret_access_key = ''
-    setTimeout(() => saved.value = false, 3000)
+    setTimeout(() => { saveStatus.value = null }, 3000)
     
     // Reload settings to confirm save
     await loadSettings()
@@ -160,13 +161,12 @@ async function saveSettings() {
   } catch (err) {
     console.error('Save error:', err)
     if (err.response?.status === 401) {
-      alert('Sesi login habis. Mengarahkan ke halaman login...')
-      // Redirect to login after a short delay
+      saveStatus.value = { type: 'error', message: 'Sesi login habis. Mengarahkan ke halaman login...' }
       setTimeout(() => window.location.href = '/login', 1500)
     } else if (err.response?.status === 419) {
-      alert('CSRF token expired atau session tidak valid.\n\nLangkah perbaikan:\n1. Refresh halaman (F5)\n2. Login ulang\n3. Coba simpan lagi')
+      saveStatus.value = { type: 'error', message: 'CSRF token expired atau session tidak valid. Silakan refresh halaman.' }
     } else {
-      alert('Gagal menyimpan: ' + (err.response?.data?.message || err.message))
+      saveStatus.value = { type: 'error', message: 'Gagal menyimpan: ' + (err.response?.data?.message || err.message) }
     }
   } finally {
     saving.value = false
@@ -261,7 +261,22 @@ async function deleteRedirect(redirect) {
 </script>
 
 <template>
-  <div class="max-w-4xl">
+  <div class="max-w-4xl relative">
+    <!-- Alerts (Toast style) -->
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm space-y-2">
+      <Alert v-if="saveStatus?.type === 'success'" variant="success" class="shadow-lg backdrop-blur-sm bg-green-50/90 dark:bg-green-900/90">
+        <CheckCircle2 class="w-4 h-4" />
+        <AlertTitle>Berhasil</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+
+      <Alert v-if="saveStatus?.type === 'error'" variant="destructive" class="shadow-lg backdrop-blur-sm bg-destructive/10">
+        <AlertCircle class="w-4 h-4" />
+        <AlertTitle>Gagal Menyimpan</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+    </div>
+
     <h2 class="text-xl font-semibold mb-6">Pengaturan</h2>
     
     <!-- Tabs -->

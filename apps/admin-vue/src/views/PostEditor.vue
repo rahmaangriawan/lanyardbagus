@@ -471,7 +471,7 @@ function viewPost() {
 <template>
   <div class="min-h-screen bg-background relative">
     <!-- Alerts (Toast style) -->
-    <div class="fixed top-16 right-6 z-50 w-full max-w-sm space-y-2">
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm space-y-2">
       <Alert v-if="saveStatus?.type === 'success'" variant="success" class="shadow-lg backdrop-blur-sm bg-green-50/90 dark:bg-green-900/90">
         <CheckCircle2 class="w-4 h-4" />
         <AlertTitle>Berhasil</AlertTitle>

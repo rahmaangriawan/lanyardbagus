@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Card, Button, Input, Label } from '../components/ui'
+import { Card, Button, Input, Label, Alert, AlertTitle, AlertDescription } from '../components/ui'
 import WysiwygEditor from '../components/WysiwygEditor.vue'
 import MediaPickerModal from '../components/MediaPickerModal.vue'
-import { ArrowLeft, Save, Loader2, Eye, Copy, Check, X, Image as ImageIcon, Calendar } from 'lucide-vue-next'
+import { ArrowLeft, Save, Loader2, Eye, Copy, Check, X, Image as ImageIcon, Calendar, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 
 const API_URL = 'https://lanyardbagus.com'
@@ -30,6 +30,7 @@ const loading = ref(false)
 const saving = ref(false)
 const showMediaPicker = ref(false)
 const copySuccess = ref(false)
+const saveStatus = ref(null)
 
 // Resizable sidebar widths
 const leftSidebarWidth = ref(280)
@@ -156,11 +157,16 @@ async function savePage() {
     if (isEdit.value) {
       await axios.put(`${API_URL}/api/admin/pages/${pageId.value}`, payload, { withCredentials: true })
     } else {
-      await axios.post(`${API_URL}/api/admin/pages`, payload, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/admin/pages`, payload, { withCredentials: true })
+      if (res.data?.id) {
+        router.replace(`/pages/edit/${res.data.id}`)
+      }
     }
-    router.push('/pages')
+    
+    saveStatus.value = { type: 'success', message: 'Halaman berhasil disimpan!' }
+    setTimeout(() => { saveStatus.value = null }, 3000)
   } catch (err) {
-    alert('Gagal menyimpan: ' + (err.response?.data?.message || err.message))
+    saveStatus.value = { type: 'error', message: 'Gagal menyimpan: ' + (err.response?.data?.message || err.message) }
   } finally {
     saving.value = false
   }
@@ -183,7 +189,21 @@ function viewPage() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
+  <div class="h-full flex flex-col relative">
+    <!-- Alerts (Toast style) -->
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm space-y-2">
+      <Alert v-if="saveStatus?.type === 'success'" variant="success" class="shadow-lg backdrop-blur-sm bg-green-50/90 dark:bg-green-900/90">
+        <CheckCircle2 class="w-4 h-4" />
+        <AlertTitle>Berhasil</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+
+      <Alert v-if="saveStatus?.type === 'error'" variant="destructive" class="shadow-lg backdrop-blur-sm bg-destructive/10">
+        <AlertCircle class="w-4 h-4" />
+        <AlertTitle>Gagal Menyimpan</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+    </div>
     <!-- Header -->
     <div class="flex items-center justify-between px-4 py-3 border-b bg-background">
       <div class="flex items-center gap-4">

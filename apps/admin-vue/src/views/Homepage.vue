@@ -1,9 +1,9 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { Card, Button, Input, Label } from '../components/ui'
+import { Card, Button, Input, Label, Alert, AlertTitle, AlertDescription } from '../components/ui'
 import MediaPicker from '../components/MediaPicker.vue'
 import { Save, Loader2, Plus, Trash2, RotateCcw, Globe, Sparkles, MessageSquare, Image as ImageIcon, 
-Package, Layout, GripVertical } from 'lucide-vue-next'
+Package, Layout, GripVertical, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 import draggable from 'vuedraggable'
 
@@ -19,6 +19,7 @@ const loading = ref(true)
 const saving = ref(false)
 const saved = ref(false)
 const activeTab = ref('header')
+const saveStatus = ref(null)
 
 function defaultHomepage() {
   return {
@@ -281,13 +282,13 @@ async function loadHomepage() {
 
 async function saveHomepage() {
   saving.value = true
-  saved.value = false
+  saveStatus.value = null
   try {
     await axios.put(`${API_URL}/api/admin/homepage`, { homepage_data: clone(homepage.value) }, { withCredentials: true })
-    saved.value = true
-    setTimeout(() => (saved.value = false), 2500)
+    saveStatus.value = { type: 'success', message: 'Tampilan Beranda berhasil diperbarui!' }
+    setTimeout(() => { saveStatus.value = null }, 3000)
   } catch (err) {
-    alert('Gagal menyimpan: ' + (err.response?.data?.message || err.message))
+    saveStatus.value = { type: 'error', message: 'Gagal menyimpan: ' + (err.response?.data?.message || err.message) }
   } finally {
     saving.value = false
   }
@@ -379,7 +380,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 relative">
+    <!-- Alerts (Toast style) -->
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm space-y-2">
+      <Alert v-if="saveStatus?.type === 'success'" variant="success" class="shadow-lg backdrop-blur-sm bg-green-50/90 dark:bg-green-900/90">
+        <CheckCircle2 class="w-4 h-4" />
+        <AlertTitle>Berhasil</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+
+      <Alert v-if="saveStatus?.type === 'error'" variant="destructive" class="shadow-lg backdrop-blur-sm bg-destructive/10">
+        <AlertCircle class="w-4 h-4" />
+        <AlertTitle>Gagal Menyimpan</AlertTitle>
+        <AlertDescription>{{ saveStatus.message }}</AlertDescription>
+      </Alert>
+    </div>
+
     <div class="flex items-start justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold">{{ pageTitle }}</h1>
@@ -397,10 +413,6 @@ onMounted(() => {
           {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
         </Button>
       </div>
-    </div>
-
-    <div v-if="saved" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-      Berhasil disimpan.
     </div>
 
     <!-- Only show tabs if there is more than one filtered tab -->
