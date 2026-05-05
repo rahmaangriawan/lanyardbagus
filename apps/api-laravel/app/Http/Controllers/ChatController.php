@@ -96,17 +96,28 @@ class ChatController extends Controller
             // Call AI API (OpenAI compatible)
             $response = $this->callAI($provider, $apiKey, $model, $messages);
 
+            \Log::info('AI API response', [
+                'provider' => $provider,
+                'model' => $model,
+                'success' => $response['success'] ?? false,
+                'has_content' => isset($response['content']),
+                'has_error' => isset($response['error']),
+                'error_value' => $response['error'] ?? null,
+                'response_keys' => array_keys($response),
+            ]);
+
             if (! $response['success']) {
                 \Log::warning('AI chat provider request failed', [
                     'provider' => $provider,
                     'model' => $model,
                     'has_api_key' => !empty($apiKey),
                     'error' => $response['error'] ?? null,
+                    'full_response' => $response,
                 ]);
 
                 return response()->json([
-                    'message' => 'Maaf, terjadi kesalahan: ' . ($response['error'] ?? 'Unknown error'),
-                    'debug' => config('app.env') === 'local' ? $response['error'] : null,
+                    'message' => 'Maaf, terjadi kesalahan: ' . ($response['error'] ?? 'Unknown error - check logs'),
+                    'debug' => config('app.env') === 'local' ? json_encode($response) : null,
                 ]);
             }
 
