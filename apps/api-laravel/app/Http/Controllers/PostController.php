@@ -68,8 +68,14 @@ class PostController extends Controller
         return response()->json($post->load('tags:id,name,slug', 'featuredImage:id,url,file_name'), 201);
     }
 
-    public function show(Post $post): JsonResponse
+    public function show(Post $post, Request $request): JsonResponse
     {
+        if ($request->user()?->isAdmin()) {
+            return response()->json(
+                $post->load('author:id,email', 'category:id,name,slug', 'featuredImage:id,url,file_name', 'tags:id,name,slug')
+            );
+        }
+
         $cacheKey = "post_show_{$post->slug}";
         $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($post) {
             return $post->load('author:id,email', 'category:id,name,slug', 'featuredImage:id,url,file_name', 'tags:id,name,slug');

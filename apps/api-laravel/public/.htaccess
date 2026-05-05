@@ -26,6 +26,14 @@
 
 # Browser Caching
 <IfModule mod_expires.c>
+    # Disable caching for Dashboard and Admin API
+    SetEnvIf Request_URI "^/dashboard" NO_CACHE
+    SetEnvIf Request_URI "^/api/admin" NO_CACHE
+    
+    Header set Cache-Control "no-cache, no-store, must-revalidate" env=NO_CACHE
+    Header set Pragma "no-cache" env=NO_CACHE
+    Header set Expires 0 env=NO_CACHE
+
     ExpiresActive On
     ExpiresDefault "access plus 1 month"
     ExpiresByType image/jpg "access plus 1 year"

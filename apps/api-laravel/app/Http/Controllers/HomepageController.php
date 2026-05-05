@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Schema;
 
 class HomepageController extends Controller
 {
-    public function show(): JsonResponse
+    public function show(Request $request): JsonResponse
     {
         if (! Schema::hasTable('site_settings')) {
             return response()->json($this->defaultPayload());
+        }
+
+        // Bypass cache for admin
+        if ($request->user()?->isAdmin()) {
+            return response()->json($this->serialize($this->getSingleton()));
         }
 
         $data = \Illuminate\Support\Facades\Cache::remember('homepage_data', 86400, function () {
