@@ -1296,8 +1296,8 @@
             right: 0;
             width: 380px;
             max-width: calc(100vw - 48px);
-            height: 520px;
-            max-height: calc(100vh - 120px);
+            height: min(520px, calc(100vh - 140px));
+            max-height: calc(100vh - 140px);
             background: white;
             border-radius: 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -1385,8 +1385,14 @@
             background: rgba(255,255,255,0.15);
         }
 
+        #chat-messages-container {
+            min-height: 0;
+            height: 100%;
+        }
+
         .chat-messages {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             padding: 16px;
             display: flex;
@@ -1452,6 +1458,7 @@
         }
 
         .chat-input-area {
+            flex: 0 0 auto;
             padding: 16px;
             background: white;
             border-top: 1px solid #e5e7eb;
@@ -1607,8 +1614,8 @@
             .chat-box {
                 width: 100vw;
                 max-width: 100vw;
-                height: 100vh;
-                max-height: 100vh;
+                height: 100dvh;
+                max-height: 100dvh;
                 bottom: 0;
                 right: 0;
                 border-radius: 0;
