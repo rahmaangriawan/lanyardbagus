@@ -47,7 +47,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::with('category')->where('is_active', true)->findOrFail($id);
+        $product = Product::with(['category', 'variants', 'accessories'])->where('is_active', true)->findOrFail($id);
         return response()->json($product);
     }
 
@@ -56,7 +56,7 @@ class ProductController extends Controller
      */
     public function publicProducts(Request $request)
     {
-        $query = Product::with('category')
+        $query = Product::with(['category', 'variants', 'accessories'])
             ->where('is_active', true)
             ->orderBy('sort_order');
 
@@ -139,7 +139,7 @@ class ProductController extends Controller
      */
     public function adminProducts(Request $request)
     {
-        $query = Product::with('category')->orderBy('sort_order');
+        $query = Product::with(['category', 'variants', 'accessories'])->orderBy('sort_order');
 
         if ($request->has('category_id') && $request->category_id) {
             $query->where('category_id', $request->category_id);
@@ -164,15 +164,27 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|integer|min:0',
             'min_order' => 'integer|min:1',
-            'specs' => 'nullable|array',
             'images' => 'nullable|array',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'variants' => 'nullable|array',
+            'accessories' => 'nullable|array',
         ]);
 
         $product = Product::create($validated);
 
-        return response()->json($product->load('category'), 201);
+        if (!empty($validated['variants'])) {
+            foreach ($validated['variants'] as $v) {
+                $product->variants()->create($v);
+            }
+        }
+        if (!empty($validated['accessories'])) {
+            foreach ($validated['accessories'] as $a) {
+                $product->accessories()->create($a);
+            }
+        }
+
+        return response()->json($product->load(['category', 'variants', 'accessories']), 201);
     }
 
     /**
@@ -189,15 +201,32 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'integer|min:0',
             'min_order' => 'integer|min:1',
-            'specs' => 'nullable|array',
             'images' => 'nullable|array',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'variants' => 'nullable|array',
+            'accessories' => 'nullable|array',
         ]);
 
         $product->update($validated);
 
-        return response()->json($product->fresh()->load('category'));
+        // Sync variants: delete old, insert new
+        if (array_key_exists('variants', $validated)) {
+            $product->variants()->delete();
+            foreach ($validated['variants'] as $v) {
+                $product->variants()->create($v);
+            }
+        }
+
+        // Sync accessories
+        if (array_key_exists('accessories', $validated)) {
+            $product->accessories()->delete();
+            foreach ($validated['accessories'] as $a) {
+                $product->accessories()->create($a);
+            }
+        }
+
+        return response()->json($product->fresh()->load(['category', 'variants', 'accessories']));
     }
 
     /**

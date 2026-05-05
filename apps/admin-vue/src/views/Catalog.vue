@@ -92,25 +92,67 @@
         </div>
       </div>
 
-      <div v-if="showProdForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <select v-model="prodForm.category_id" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.category_id }">
-          <option :value="null" disabled>Pilih kategori</option>
-          <option v-for="c in categories" :value="c.id" :key="c.id">{{ c.name }}</option>
-        </select>
-        <input v-model="prodForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.name }" placeholder="Nama produk">
-        <input v-model="prodForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (opsional)">
-        <input v-model.number="prodForm.price" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.price }" placeholder="Harga per pcs">
-        <input v-model.number="prodForm.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.min_order }" placeholder="Min order (default 50)">
-        <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="prodForm.is_active"> Aktif</label>
-        <input v-model="prodForm.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="Gambar (URL dipisah koma)">
-        <div v-if="firstImageUrl(prodForm.imagesCsv)" class="md:col-span-1 flex items-center gap-2">
-          <img :src="firstImageUrl(prodForm.imagesCsv)" alt="Preview" class="w-16 h-16 object-cover rounded border" />
-          <span class="text-xs text-muted-foreground">Preview</span>
+      <!-- Add Product Form -->
+      <div v-if="showProdForm" class="space-y-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <select v-model="prodForm.category_id" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.category_id }">
+            <option :value="null" disabled>Pilih kategori</option>
+            <option v-for="c in categories" :value="c.id" :key="c.id">{{ c.name }}</option>
+          </select>
+          <input v-model="prodForm.name" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.name }" placeholder="Nama produk">
+          <input v-model="prodForm.slug" class="border rounded-lg px-3 py-2 text-sm" placeholder="Slug (opsional)">
+          <input v-model.number="prodForm.price" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.price }" placeholder="Harga per pcs">
+          <input v-model.number="prodForm.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" :class="{ 'border-red-500': prodErrors.min_order }" placeholder="Min order (default 50)">
+          <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="prodForm.is_active"> Aktif</label>
+          <input v-model="prodForm.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="Gambar (URL dipisah koma)">
+          <div v-if="firstImageUrl(prodForm.imagesCsv)" class="md:col-span-1 flex items-center gap-2">
+            <img :src="firstImageUrl(prodForm.imagesCsv)" alt="Preview" class="w-16 h-16 object-cover rounded border" />
+            <span class="text-xs text-muted-foreground">Preview</span>
+          </div>
+          <div class="flex items-center gap-3 md:col-span-3">
+            <input v-model.number="prodForm.sort_order" type="number" class="border rounded-lg px-3 py-2 text-sm w-32" placeholder="Urutan">
+          </div>
         </div>
-        <input v-model="prodForm.specsJson" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" :class="{ 'border-red-500': prodErrors.specsJson }" placeholder='Spesifikasi (JSON), contoh: {"Lebar":"2 cm","Cetak":"Sublim"}'>
-        <div class="flex items-center gap-3 md:col-span-3">
-          <input v-model.number="prodForm.sort_order" type="number" class="border rounded-lg px-3 py-2 text-sm w-32" placeholder="Urutan">
-          <button @click="submitProduct" class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg">Simpan</button>
+
+        <!-- Variants -->
+        <div class="border rounded-lg p-4 bg-gray-50">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700">Varian Produk (mis. ukuran, warna)</h4>
+            <button @click="addVariant" class="px-2 py-1 text-xs bg-white border rounded-md hover:bg-gray-100">+ Tambah Varian</button>
+          </div>
+          <div v-for="(v,i) in prodForm.variants" :key="i" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2 items-center">
+            <input v-model="v.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama varian (mis. Lanyard 2 cm)">
+            <input v-model.number="v.price_adjustment" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Tambahan harga">
+            <input v-model="v.image" class="border rounded-lg px-3 py-2 text-sm" placeholder="URL gambar (opsional)">
+            <div class="flex items-center gap-2">
+              <label class="text-xs flex items-center gap-1"><input type="checkbox" v-model="v.is_active"> Aktif</label>
+              <button @click="prodForm.variants.splice(i,1)" class="text-red-500 text-xs hover:underline">Hapus</button>
+            </div>
+          </div>
+          <p v-if="prodForm.variants.length === 0" class="text-xs text-gray-400">Belum ada varian. Klik "Tambah Varian" untuk menambah pilihan ukuran / warna.</p>
+        </div>
+
+        <!-- Accessories -->
+        <div class="border rounded-lg p-4 bg-gray-50">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700">Aksesoris (opsional)</h4>
+            <button @click="addAccessory" class="px-2 py-1 text-xs bg-white border rounded-md hover:bg-gray-100">+ Tambah Aksesoris</button>
+          </div>
+          <div v-for="(a,i) in prodForm.accessories" :key="i" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2 items-center">
+            <input v-model="a.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama aksesoris (mis. ID Card Clip)">
+            <input v-model.number="a.price" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Harga">
+            <input v-model="a.image" class="border rounded-lg px-3 py-2 text-sm" placeholder="URL gambar (opsional)">
+            <div class="flex items-center gap-2">
+              <label class="text-xs flex items-center gap-1"><input type="checkbox" v-model="a.is_active"> Aktif</label>
+              <button @click="prodForm.accessories.splice(i,1)" class="text-red-500 text-xs hover:underline">Hapus</button>
+            </div>
+          </div>
+          <p v-if="prodForm.accessories.length === 0" class="text-xs text-gray-400">Belum ada aksesoris. Klik "Tambah Aksesoris" untuk menambah.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button @click="submitProduct" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">Simpan Produk</button>
+          <button @click="showProdForm = false" class="px-4 py-2 text-sm border rounded-lg">Batal</button>
         </div>
       </div>
 
@@ -158,21 +200,58 @@
         </table>
       </div>
 
-      <!-- Edit modal simple -->
-      <div v-if="editProd" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-        <div class="bg-white border rounded-xl p-5 w-full max-w-2xl">
+      <!-- Edit modal -->
+      <div v-if="editProd" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50 overflow-y-auto py-8">
+        <div class="bg-white border rounded-xl p-5 w-full max-w-3xl my-auto">
           <h3 class="text-lg font-semibold mb-4">Edit Produk</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <select v-model="editProd.category_id" class="border rounded-lg px-3 py-2 text-sm">
-              <option v-for="c in categories" :value="c.id" :key="c.id">{{ c.name }}</option>
-            </select>
-            <input v-model="editProd.name" class="border rounded-lg px-3 py-2 text-sm" />
-            <input v-model="editProd.slug" class="border rounded-lg px-3 py-2 text-sm" />
-            <input v-model.number="editProd.price" type="number" class="border rounded-lg px-3 py-2 text-sm" />
-            <input v-model.number="editProd.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" />
-            <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="editProd.is_active"> Aktif</label>
-            <input v-model="editProd.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" />
-            <input v-model="editProd.specsJson" class="border rounded-lg px-3 py-2 text-sm md:col-span-3" />
+          <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <select v-model="editProd.category_id" class="border rounded-lg px-3 py-2 text-sm">
+                <option v-for="c in categories" :value="c.id" :key="c.id">{{ c.name }}</option>
+              </select>
+              <input v-model="editProd.name" class="border rounded-lg px-3 py-2 text-sm" />
+              <input v-model="editProd.slug" class="border rounded-lg px-3 py-2 text-sm" />
+              <input v-model.number="editProd.price" type="number" class="border rounded-lg px-3 py-2 text-sm" />
+              <input v-model.number="editProd.min_order" type="number" class="border rounded-lg px-3 py-2 text-sm" />
+              <label class="text-sm flex items-center gap-2"><input type="checkbox" v-model="editProd.is_active"> Aktif</label>
+              <input v-model="editProd.imagesCsv" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" />
+            </div>
+
+            <!-- Edit Variants -->
+            <div class="border rounded-lg p-3 bg-gray-50">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold text-gray-700">Varian</h4>
+                <button @click="editProd.variants.push({name:'',price_adjustment:0,image:'',is_active:true})" class="px-2 py-1 text-xs bg-white border rounded-md hover:bg-gray-100">+ Tambah</button>
+              </div>
+              <div v-for="(v,i) in editProd.variants" :key="i" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2 items-center">
+                <input v-model="v.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama varian">
+                <input v-model.number="v.price_adjustment" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Tambahan harga">
+                <input v-model="v.image" class="border rounded-lg px-3 py-2 text-sm" placeholder="URL gambar">
+                <div class="flex items-center gap-2">
+                  <label class="text-xs flex items-center gap-1"><input type="checkbox" v-model="v.is_active"> Aktif</label>
+                  <button @click="editProd.variants.splice(i,1)" class="text-red-500 text-xs hover:underline">Hapus</button>
+                </div>
+              </div>
+              <p v-if="!editProd.variants || editProd.variants.length === 0" class="text-xs text-gray-400">Tidak ada varian</p>
+            </div>
+
+            <!-- Edit Accessories -->
+            <div class="border rounded-lg p-3 bg-gray-50">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold text-gray-700">Aksesoris</h4>
+                <button @click="editProd.accessories.push({name:'',price:0,image:'',is_active:true})" class="px-2 py-1 text-xs bg-white border rounded-md hover:bg-gray-100">+ Tambah</button>
+              </div>
+              <div v-for="(a,i) in editProd.accessories" :key="i" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2 items-center">
+                <input v-model="a.name" class="border rounded-lg px-3 py-2 text-sm" placeholder="Nama aksesoris">
+                <input v-model.number="a.price" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Harga">
+                <input v-model="a.image" class="border rounded-lg px-3 py-2 text-sm" placeholder="URL gambar">
+                <div class="flex items-center gap-2">
+                  <label class="text-xs flex items-center gap-1"><input type="checkbox" v-model="a.is_active"> Aktif</label>
+                  <button @click="editProd.accessories.splice(i,1)" class="text-red-500 text-xs hover:underline">Hapus</button>
+                </div>
+              </div>
+              <p v-if="!editProd.accessories || editProd.accessories.length === 0" class="text-xs text-gray-400">Tidak ada aksesoris</p>
+            </div>
           </div>
           <div class="mt-4 flex justify-end gap-2">
             <button class="px-3 py-2 text-sm border rounded-lg" @click="editProd=null">Batal</button>
@@ -199,7 +278,7 @@ const showProdForm = ref(false)
 const toasts = ref([])
 
 const catForm = ref({ name: '', slug: '', description: '', image: '', is_active: true, sort_order: 0 })
-const prodForm = ref({ category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', specsJson: '' })
+const prodForm = ref({ category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', variants: [], accessories: [] })
 
 const editProd = ref(null)
 const editingCategoryId = ref(null)
@@ -310,16 +389,23 @@ async function deleteCategory(c) {
   }
 }
 
+function addVariant() {
+  prodForm.value.variants.push({ name: '', price_adjustment: 0, image: '', is_active: true })
+}
+
+function addAccessory() {
+  prodForm.value.accessories.push({ name: '', price: 0, image: '', is_active: true })
+}
+
 function normalizeProductPayload(f) {
   const payload = { ...f }
   if (payload.imagesCsv) {
     payload.images = payload.imagesCsv.split(',').map(s => s.trim()).filter(Boolean)
   }
   delete payload.imagesCsv
-  if (payload.specsJson) {
-    try { payload.specs = JSON.parse(payload.specsJson) } catch(e) { payload.specs = {} }
-  }
-  delete payload.specsJson
+  // include variants & accessories arrays
+  payload.variants = (payload.variants || []).filter(v => v.name?.trim())
+  payload.accessories = (payload.accessories || []).filter(a => a.name?.trim())
   return payload
 }
 
@@ -347,7 +433,7 @@ async function submitProduct() {
   })
   if (res.ok) {
     showProdForm.value = false
-    prodForm.value = { category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', specsJson: '' }
+    prodForm.value = { category_id: null, name: '', slug: '', price: 0, min_order: 50, is_active: true, sort_order: 0, imagesCsv: '', variants: [], accessories: [] }
     fetchProducts()
     showToast('Produk berhasil disimpan', 'success')
   } else {
@@ -361,7 +447,8 @@ function startEditProduct(p) {
   editProd.value = {
     ...p,
     imagesCsv: Array.isArray(p.images) ? p.images.join(',') : '',
-    specsJson: p.specs ? JSON.stringify(p.specs) : ''
+    variants: p.variants ? JSON.parse(JSON.stringify(p.variants)) : [],
+    accessories: p.accessories ? JSON.parse(JSON.stringify(p.accessories)) : []
   }
 }
 

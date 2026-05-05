@@ -388,7 +388,12 @@
 
             // Add initial item row
             if (preselectedProductId) {
-                addItem(preselectedProductId);
+                const preProduct = allProducts.find(p => p.id == preselectedProductId);
+                if (preProduct && (preProduct.variants?.length || preProduct.accessories?.length)) {
+                    openVAModal(preProduct, (va) => addItem(preselectedProductId, va));
+                } else {
+                    addItem(preselectedProductId);
+                }
             } else {
                 addItem();
             }
@@ -411,14 +416,26 @@
             return html;
         }
 
-        function addItem(productId) {
+        function addItem(productId, va) {
             const container = document.getElementById('items-container');
             const row = document.createElement('div');
             row.className = 'item-row';
             row.dataset.index = itemIndex++;
             const idx = row.dataset.index;
+            const vaStr = va ? JSON.stringify(va) : '';
+            row.dataset.va = vaStr;
 
             const hasProducts = allProducts.length > 0;
+
+            let vaDisplay = '';
+            if (va) {
+                if (va.variant) vaDisplay += `<span style="display:inline-block; font-size:11px; color:#1e293b; background:#f1f5f9; border-radius:6px; padding:2px 8px; margin-right:6px;">Varian: ${va.variant.name}</span>`;
+                if (va.accessories && va.accessories.length) {
+                    va.accessories.forEach(a => {
+                        vaDisplay += `<span style="display:inline-block; font-size:11px; color:#1e293b; background:#f1f5f9; border-radius:6px; padding:2px 8px; margin-right:6px;">+ ${a.name}</span>`;
+                    });
+                }
+            }
 
             row.innerHTML = `
                 <div class="form-group" style="grid-column: span 2;">
@@ -426,6 +443,7 @@
                     <select class="form-select item-product" data-idx="${idx}" required onchange="onProductChange(${idx})">
                         ${hasProducts ? buildProductOptions(productId) : '<option value="">Memuat produk...</option>'}
                     </select>
+                    <div style="margin-top:4px;">${vaDisplay}</div>
                 </div>
                 <div class="form-group">
                     <label>Jumlah (pcs) *</label>
@@ -472,8 +490,23 @@
                 const qty = parseInt(qtyInput?.value) || 0;
                 if (productId && qty > 0) {
                     const option = select.options[select.selectedIndex];
-                    const price = parseInt(option?.dataset?.price) || 0;
-                    const name = option?.textContent?.split(' - ')[0] || select.value;
+                    const basePrice = parseInt(option?.dataset?.price) || 0;
+                    let name = option?.textContent?.split(' - ')[0] || select.value;
+                    let price = basePrice;
+
+                    let va = null;
+                    try { va = JSON.parse(row.dataset.va || '{}') } catch(e) {}
+                    if (va && va.variant) {
+                        name += ' - ' + va.variant.name;
+                        price += parseInt(va.variant.price_adjustment || 0);
+                    }
+                    if (va && va.accessories && va.accessories.length) {
+                        va.accessories.forEach(a => {
+                            name += ' + ' + a.name;
+                            price += parseInt(a.price || 0);
+                        });
+                    }
+
                     items.push({ name, product_id: productId, qty, price, size: '' });
                 }
             });
@@ -492,10 +525,11 @@
             let total = 0;
             let html = '';
             items.forEach(item => {
+                const unitPrice = item.price;
                 const subtotal = item.qty * item.price;
                 total += subtotal;
                 html += `<div class="summary-row">
-                    <span>${item.name} × ${item.qty} pcs</span>
+                    <span>${item.name} × ${item.qty} pcs <span style="color:#64748b; font-size:12px;">(Rp ${unitPrice.toLocaleString('id-ID')}/pcs)</span></span>
                     <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
                 </div>`;
             });
@@ -639,9 +673,107 @@
             }, 5000);
         }
 
+        // ================= VARIANT & ACCESSORY MODAL =================
+        let vaProduct = null;
+        let vaCallback = null;
+
+        function openVAModal(product, onConfirm) {
+            vaProduct = product;
+            vaCallback = onConfirm;
+            const modal = document.getElementById('va-modal');
+            modal.style.display = 'flex';
+            document.getElementById('va-product-info').innerHTML = `<strong>${product.name}</strong> <span style="color:#64748b; font-size:13px;">- Rp ${Number(product.price).toLocaleString('id-ID')}/pcs</span>`;
+
+            // Variants
+            const varSec = document.getElementById('va-variants-section');
+            if (product.variants && product.variants.length > 0) {
+                let html = `<label style="font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Pilih Varian</label>`;
+                html += `<div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+                product.variants.forEach((v, i) => {
+                    const label = v.price_adjustment > 0 ? `${v.name} (+Rp ${Number(v.price_adjustment).toLocaleString('id-ID')})` : v.name;
+                    html += `<label style="cursor:pointer; display:flex; align-items:center; gap:6px; border:1.5px solid #e5e7eb; border-radius:10px; padding:8px 12px; font-size:13px; transition:all .15s;" class="va-variant-chip" data-idx="${i}" onclick="selectVariantChip(this)">
+                        <input type="radio" name="va_variant" value="${i}" style="accent-color:#1e293b;">
+                        <span>${label}</span>
+                    </label>`;
+                });
+                html += `</div>`;
+                varSec.innerHTML = html;
+            } else {
+                varSec.innerHTML = '';
+            }
+
+            // Accessories
+            const accSec = document.getElementById('va-accessories-section');
+            if (product.accessories && product.accessories.length > 0) {
+                let html = `<label style="font-size:13px; font-weight:600; display:block; margin-bottom:8px; margin-top:4px;">Pilih Aksesoris (bisa lebih dari 1)</label>`;
+                html += `<div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+                product.accessories.forEach((a, i) => {
+                    const label = a.price > 0 ? `${a.name} (+Rp ${Number(a.price).toLocaleString('id-ID')})` : a.name;
+                    html += `<label style="cursor:pointer; display:flex; align-items:center; gap:6px; border:1.5px solid #e5e7eb; border-radius:10px; padding:8px 12px; font-size:13px; transition:all .15s;" class="va-accessory-chip" data-idx="${i}" onclick="toggleAccessoryChip(this)">
+                        <input type="checkbox" value="${i}" style="accent-color:#1e293b;">
+                        <span>${label}</span>
+                    </label>`;
+                });
+                html += `</div>`;
+                accSec.innerHTML = html;
+            } else {
+                accSec.innerHTML = '';
+            }
+            lucide.createIcons();
+        }
+
+        function selectVariantChip(el) {
+            document.querySelectorAll('.va-variant-chip').forEach(c => c.style.borderColor = '#e5e7eb');
+            el.style.borderColor = '#1e293b';
+            el.querySelector('input').checked = true;
+        }
+
+        function toggleAccessoryChip(el) {
+            const cb = el.querySelector('input');
+            cb.checked = !cb.checked;
+            el.style.borderColor = cb.checked ? '#1e293b' : '#e5e7eb';
+        }
+
+        function closeVAModal() {
+            document.getElementById('va-modal').style.display = 'none';
+            vaProduct = null;
+            vaCallback = null;
+        }
+
+        function confirmVASelection() {
+            if (!vaProduct || !vaCallback) return;
+            const selectedVariantIdx = document.querySelector('input[name="va_variant"]:checked');
+            const selectedAccessoryIdxes = Array.from(document.querySelectorAll('#va-accessories-section input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+            const result = {
+                variant: selectedVariantIdx ? vaProduct.variants[parseInt(selectedVariantIdx.value)] : null,
+                accessories: selectedAccessoryIdxes.map(i => vaProduct.accessories[i])
+            };
+            closeVAModal();
+            vaCallback(result);
+        }
+
         // Init
         loadProducts();
         lucide.createIcons();
     </script>
+    <!-- Variant & Accessory Modal -->
+    <div id="va-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:white; border-radius:16px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.15);">
+            <div style="padding:20px 24px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between;">
+                <h3 style="font-size:16px; font-weight:700;">Pilih Varian & Aksesoris</h3>
+                <button type="button" onclick="closeVAModal()" style="background:none; border:none; cursor:pointer; padding:4px;"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div style="padding:20px 24px;">
+                <div id="va-product-info" style="margin-bottom:16px;"></div>
+                <div id="va-variants-section" style="margin-bottom:16px;"></div>
+                <div id="va-accessories-section" style="margin-bottom:16px;"></div>
+            </div>
+            <div style="padding:16px 24px 20px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="closeVAModal()" style="padding:8px 16px; border:1px solid #e5e7eb; border-radius:8px; background:white; font-size:13px; cursor:pointer;">Batal</button>
+                <button type="button" onclick="confirmVASelection()" style="padding:8px 16px; background:#1e293b; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer; font-weight:600;">Tambah ke Pesanan</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
