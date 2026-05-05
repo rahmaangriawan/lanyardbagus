@@ -218,7 +218,7 @@ async function loadPost() {
     post.value = {
       ...res.data,
       // Convert featuredImage to featured_image for frontend
-      featured_image: res.data.featuredImage || null,
+      featured_image: res.data.featured_image || res.data.featuredImage || null,
       published_at: formatDateTimeLocal(res.data.published_at)
     }
     post.value.tags_input = (res.data?.tags || []).map(tag => tag.name).join(', ')

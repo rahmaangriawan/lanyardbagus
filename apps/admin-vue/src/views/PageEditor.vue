@@ -120,7 +120,7 @@ async function loadPage() {
     const res = await axios.get(`${API_URL}/api/admin/pages/${pageId.value}`, { withCredentials: true })
     page.value = {
       ...res.data,
-      featured_image: res.data.featuredImage || null,
+      featured_image: res.data.featured_image || res.data.featuredImage || null,
       published_at: formatDateTimeLocal(res.data.published_at)
     }
     // Handle is_published to status mapping if needed
