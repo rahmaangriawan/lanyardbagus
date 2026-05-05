@@ -324,32 +324,55 @@ class ChatController extends Controller
 
     private function callGoogle(string $apiKey, string $model, array $messages): array
     {
-        // Gemini API
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
-            'contents' => array_map(function ($msg) {
-                return [
-                    'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
-                    'parts' => [['text' => $msg['content']]],
-                ];
-            }, array_filter($messages, fn($m) => $m['role'] !== 'system')),
-            'generationConfig' => [
-                'temperature' => 0.7,
-                'maxOutputTokens' => 1000,
-            ],
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
+        $contents = array_map(function ($msg) {
             return [
-                'success' => true,
-                'content' => $data['candidates'][0]['content']['parts'][0]['text'],
-                'tokens' => null, // Gemini doesn't always return token counts
+                'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
+                'parts' => [['text' => $msg['content']]],
             ];
+        }, array_filter($messages, fn ($m) => $m['role'] !== 'system'));
+
+        $candidateModels = array_values(array_unique(array_filter([
+            $this->normalizeGoogleModel($model),
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+        ])));
+
+        $lastError = null;
+
+        foreach ($candidateModels as $candidateModel) {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$candidateModel}:generateContent?key={$apiKey}", [
+                'contents' => $contents,
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 1000,
+                ],
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                $text = data_get($data, 'candidates.0.content.parts.0.text');
+                if (filled($text)) {
+                    return [
+                        'success' => true,
+                        'content' => $text,
+                        'tokens' => null,
+                        'model' => $candidateModel,
+                    ];
+                }
+
+                $lastError = 'Gemini response missing text payload for model ' . $candidateModel;
+                continue;
+            }
+
+            $lastError = 'Model ' . $candidateModel . ' failed: ' . $response->status() . ' ' . $response->body();
         }
 
-        return ['success' => false, 'error' => $response->body()];
+        return ['success' => false, 'error' => $lastError ?: 'Unknown Gemini error'];
     }
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
@@ -380,6 +403,25 @@ class ChatController extends Controller
         };
     }
 
+    private function normalizeGoogleModel(?string $model): ?string
+    {
+        $model = trim((string) $model);
+
+        if ($model === '') {
+            return null;
+        }
+
+        if (str_starts_with($model, 'gemini-')) {
+            return $model;
+        }
+
+        if ($model === 'google') {
+            return 'gemini-2.0-flash';
+        }
+
+        return null;
+    }
+
     private function fallbackReply(string $message): string
     {
         $lowerMessage = mb_strtolower($message);
@@ -396,7 +438,7 @@ class ChatController extends Controller
             return 'Bisa, kami bantu cek desain dan rekomendasi material yang paling cocok. Kirim detail kebutuhan Anda supaya kami arahkan lebih tepat.';
         }
 
-        return 'Saya belum bisa menjawab dengan AI saat ini, tapi tim Lanyard Bagus siap bantu lewat WhatsApp. Kirim kebutuhan Anda, nanti kami arahkan ke pilihan yang paling cocok.';
+        return 'Siap, ceritakan kebutuhan lanyard Anda: jumlah pcs, ukuran, dan model yang diinginkan. Saya bantu arahkan ke opsi yang paling cocok.';
     }
 
     private function getDefaultSystemPrompt(): string
