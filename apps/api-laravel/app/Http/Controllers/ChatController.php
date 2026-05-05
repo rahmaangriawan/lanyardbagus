@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ChatMessage;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
@@ -54,7 +53,7 @@ class ChatController extends Controller
 
             // Get AI settings
             $apiKey = Setting::get('ai_api_key');
-            $provider = $this->resolveProvider(Setting::get('ai_provider', 'ollama'), $apiKey);
+            $provider = $this->resolveProvider(Setting::get('ai_provider', 'groq'), $apiKey);
             $model = $this->resolveModel($provider, Setting::get('ai_model'));
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
             $enabled = Setting::get('ai_enabled', 'true');
@@ -200,9 +199,8 @@ class ChatController extends Controller
     {
         $settings = [
             'enabled' => Setting::get('ai_enabled', 'true') === 'true',
-            'provider' => Setting::get('ai_provider', 'ollama'),
-            'model' => Setting::get('ai_model', config('services.ollama.model', 'llama3.2')),
-                'base_url' => Setting::get('ai_ollama_base_url', config('services.ollama.base_url', 'http://127.0.0.1:11434')),
+            'provider' => Setting::get('ai_provider', 'groq'),
+            'model' => Setting::get('ai_model', config('services.groq.model', 'llama-3.1-8b-instant')),
             'api_key' => '',
             'has_api_key' => (bool) Setting::get('ai_api_key'),
             'system_prompt' => Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt()),
@@ -220,9 +218,8 @@ class ChatController extends Controller
     {
         $validated = $request->validate([
             'enabled' => ['required', 'boolean'],
-            'provider' => ['required', 'string', 'in:ollama'],
+            'provider' => ['required', 'string', 'in:groq'],
             'model' => ['required', 'string'],
-            'base_url' => ['nullable', 'string', 'max:255'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['required', 'string', 'max:5000'],
             'welcome_message' => ['required', 'string', 'max:500'],
@@ -230,9 +227,8 @@ class ChatController extends Controller
         ]);
 
         Setting::set('ai_enabled', $validated['enabled'] ? 'true' : 'false', 'ai');
-        Setting::set('ai_provider', 'ollama', 'ai');
+        Setting::set('ai_provider', 'groq', 'ai');
         Setting::set('ai_model', $validated['model'], 'ai');
-        Setting::set('ai_ollama_base_url', trim((string) ($validated['base_url'] ?? '')), 'ai');
         if ($validated['api_key'] && $validated['api_key'] !== '***') {
             Setting::set('ai_api_key', $validated['api_key'], 'ai');
         }
@@ -249,19 +245,17 @@ class ChatController extends Controller
     public function testProvider(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'provider' => ['nullable', 'string', 'in:ollama'],
+            'provider' => ['nullable', 'string', 'in:groq'],
             'model' => ['nullable', 'string'],
-            'base_url' => ['nullable', 'string', 'max:255'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['nullable', 'string', 'max:5000'],
             'message' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key')));
-        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'ollama');
+        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'groq');
         $provider = $this->resolveProvider($storedProvider, $apiKey);
         $model = $this->resolveModel($provider, $validated['model'] ?? Setting::get('ai_model'));
-        $baseUrl = trim((string) ($validated['base_url'] ?? Setting::get('ai_ollama_base_url', config('services.ollama.base_url', 'http://127.0.0.1:11434'))));
         $systemPrompt = $validated['system_prompt'] ?? Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
         $testMessage = $validated['message'] ?? 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.';
 
@@ -270,7 +264,7 @@ class ChatController extends Controller
             ['role' => 'user', 'content' => $testMessage],
         ];
 
-        $response = $this->callAI($provider, $apiKey, $model, $messages, $baseUrl);
+        $response = $this->callAI($provider, $apiKey, $model, $messages);
 
         if (! $response['success']) {
             return response()->json([
@@ -292,92 +286,65 @@ class ChatController extends Controller
     /**
      * Call AI provider API
      */
-    private function callAI(string $provider, string $apiKey, string $model, array $messages, ?string $baseUrl = null): array
+    private function callAI(string $provider, string $apiKey, string $model, array $messages): array
     {
         try {
             switch ($provider) {
-                case 'ollama':
+                case 'groq':
                 default:
-                    return $this->callOllama($model, $messages, $baseUrl);
+                    return $this->callGroq($apiKey, $model, $messages);
             }
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
-    private function callOllama(string $model, array $messages, ?string $baseUrl = null): array
+    private function callGroq(string $apiKey, string $model, array $messages): array
     {
-        $baseUrl = rtrim((string) ($baseUrl ?: config('services.ollama.base_url', env('OLLAMA_BASE_URL', 'http://127.0.0.1:11434'))), '/');
-        $model = $model !== '' ? $model : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2'));
+        $baseUrl = rtrim((string) config('services.groq.base_url', 'https://api.groq.com/openai/v1'), '/');
+        $model = $model !== '' ? $model : (string) config('services.groq.model', 'llama-3.1-8b-instant');
 
         try {
-            $response = Http::connectTimeout(5)
-                ->timeout(90)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($baseUrl . '/api/chat', [
+            $response = Http::connectTimeout(10)
+                ->timeout(60)
+                ->withToken($apiKey)
+                ->acceptJson()
+                ->post($baseUrl . '/chat/completions', [
                     'model' => $model,
-                    'messages' => $this->convertMessagesToOllamaMessages($messages),
-                    'stream' => false,
-                    'options' => [
-                        'temperature' => 0.7,
-                    ],
+                    'messages' => $messages,
+                    'temperature' => 0.7,
+                    'max_tokens' => 1000,
                 ]);
         } catch (ConnectionException $e) {
             return [
                 'success' => false,
-                'error' => 'Tidak bisa terhubung ke Ollama di ' . $baseUrl . '. Pastikan service menyala dan Laravel bisa mengakses host itu. Detail: ' . $e->getMessage(),
-            ];
-        } catch (\Throwable $e) {
-            return [
-                'success' => false,
-                'error' => 'Gagal memanggil Ollama: ' . $e->getMessage(),
+                'error' => 'Tidak bisa terhubung ke Groq. Cek koneksi internet atau base URL. Detail: ' . $e->getMessage(),
             ];
         }
 
         if ($response->successful()) {
             $data = $response->json();
-            $text = data_get($data, 'message.content')
-                ?? data_get($data, 'response');
+            $text = data_get($data, 'choices.0.message.content');
 
             if (filled($text)) {
                 return [
                     'success' => true,
                     'content' => $text,
-                    'tokens' => null,
+                    'tokens' => data_get($data, 'usage.total_tokens'),
                     'model' => $model,
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => 'Ollama response missing text payload for model ' . $model,
+                'error' => 'Groq response missing text payload for model ' . $model,
             ];
         }
 
         return [
             'success' => false,
-                'error' => $this->formatOllamaError($response->status(), $response->body(), $baseUrl, $model),
+            'error' => $this->formatGroqError($response->status(), $response->body(), $model),
         ];
-    }
-
-
-    private function formatOllamaError(int $status, string $body, string $baseUrl, string $model): string
-    {
-        if ($status === 404) {
-            return 'Endpoint Ollama tidak ditemukan di ' . $baseUrl . '. Pastikan Ollama aktif dan URL-nya benar.';
-        }
-
-        if ($status === 400 && str_contains($body, 'model')) {
-            return 'Model ' . $model . ' belum tersedia di Ollama. Jalankan `ollama pull ' . $model . '` lalu coba lagi.';
-        }
-
-        if ($status === 500) {
-            return 'Ollama mengembalikan error 500 untuk model ' . $model . '. Cek status server dan log Ollama.';
-        }
-
-        return 'Ollama request failed: ' . $status . ' ' . $body;
     }
     private function callOpenAI(string $apiKey, string $model, array $messages): array
     {
@@ -521,6 +488,27 @@ class ChatController extends Controller
         return ['success' => false, 'error' => $lastError ?: 'Unknown Gemini error'];
     }
 
+    private function formatGroqError(int $status, string $body, string $model): string
+    {
+        if ($status === 401) {
+            return 'API key Groq tidak valid atau belum diisi.';
+        }
+
+        if ($status === 404) {
+            return 'Endpoint Groq tidak ditemukan. Cek konfigurasi base URL.';
+        }
+
+        if ($status === 400 && str_contains($body, 'model')) {
+            return 'Model ' . $model . ' tidak tersedia di Groq. Pilih model lain di dashboard.';
+        }
+
+        if ($status === 429) {
+            return 'Groq membatasi request Anda sementara. Coba lagi sebentar atau ganti model.';
+        }
+
+        return 'Groq request failed: ' . $status . ' ' . $body;
+    }
+
     private function extractSystemPrompt(array $messages): string
     {
         foreach ($messages as $message) {
@@ -555,7 +543,7 @@ class ChatController extends Controller
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
     {
-        return 'ollama';
+        return 'groq';
     }
 
     private function resolveModel(string $provider, ?string $storedModel): string
@@ -563,29 +551,9 @@ class ChatController extends Controller
         $storedModel = trim((string) $storedModel);
 
         return match ($provider) {
-            'ollama' => $storedModel !== '' ? $storedModel : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2')),
-            default => $storedModel !== '' ? $storedModel : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2')),
+            'groq' => $storedModel !== '' ? $storedModel : (string) config('services.groq.model', 'llama-3.1-8b-instant'),
+            default => $this->normalizeGoogleModel($storedModel),
         };
-    }
-
-    private function convertMessagesToOllamaMessages(array $messages): array
-    {
-        $ollamaMessages = [];
-
-        foreach ($messages as $message) {
-            $role = $message['role'] ?? 'user';
-
-            if (! in_array($role, ['system', 'user', 'assistant'], true)) {
-                continue;
-            }
-
-            $ollamaMessages[] = [
-                'role' => $role,
-                'content' => (string) ($message['content'] ?? ''),
-            ];
-        }
-
-        return $ollamaMessages;
     }
 
     private function fallbackReply(string $message): string

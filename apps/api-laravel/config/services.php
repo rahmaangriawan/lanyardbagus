@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'groq' => [
+        'base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+        'model' => env('GROQ_MODEL', 'llama-3.1-8b-instant'),
+    ],
+
     'ollama' => [
         'base_url' => env('OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
         'model' => env('OLLAMA_MODEL', 'llama3.2'),

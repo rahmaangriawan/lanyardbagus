@@ -25,9 +25,8 @@ const testResult = ref('')
 // AI Settings
 const aiSettings = ref({
   enabled: true,
-  provider: 'ollama',
-  model: 'llama3.2',
-  base_url: 'http://127.0.0.1:11434',
+  provider: 'groq',
+  model: 'llama-3.1-8b-instant',
   api_key: '',
   system_prompt: '',
   welcome_message: '',
@@ -44,12 +43,11 @@ const trainingData = ref([])
 
 // Provider models
 const providerModels = {
-  ollama: [
-    { value: 'llama3.2', label: 'llama3.2' },
-    { value: 'llama3.1', label: 'llama3.1' },
-    { value: 'qwen2.5', label: 'qwen2.5' },
-    { value: 'mistral', label: 'mistral' },
-    { value: 'gemma3', label: 'gemma3' },
+  groq: [
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
+    { value: 'gemma2-9b-it', label: 'gemma2-9b-it' },
   ]
 }
 
@@ -73,17 +71,14 @@ async function loadAISettings() {
   try {
     const res = await axios.get(`${API_URL}/api/admin/chat/settings`, { withCredentials: true })
     aiSettings.value = { ...aiSettings.value, ...res.data }
-    aiSettings.value.api_key = ''
-    aiSettings.value.provider = 'ollama'
-    aiSettings.value.model = aiSettings.value.model || 'llama3.2'
-    aiSettings.value.base_url = aiSettings.value.base_url || 'http://127.0.0.1:11434'
+    aiSettings.value.provider = 'groq'
+    aiSettings.value.model = aiSettings.value.model || 'llama-3.1-8b-instant'
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
   } catch (err) {
     console.error('Failed to load AI settings:', err)
-    aiSettings.value.provider = 'ollama'
-    aiSettings.value.model = 'llama3.2'
-    aiSettings.value.base_url = 'http://127.0.0.1:11434'
+    aiSettings.value.provider = 'groq'
+    aiSettings.value.model = 'llama-3.1-8b-instant'
     aiSettings.value.system_prompt = defaultPrompt
     aiSettings.value.welcome_message = defaultWelcome
   }
@@ -120,10 +115,8 @@ async function loadTrainingData() {
 async function saveSettings() {
   loading.value = true
   try {
-    aiSettings.value.provider = 'ollama'
-    aiSettings.value.model = aiSettings.value.model || 'llama3.2'
-    aiSettings.value.base_url = aiSettings.value.base_url || 'http://127.0.0.1:11434'
-    aiSettings.value.api_key = ''
+    aiSettings.value.provider = 'groq'
+    aiSettings.value.model = aiSettings.value.model || 'llama-3.1-8b-instant'
 
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
     saved.value = true
@@ -141,10 +134,9 @@ async function testProvider() {
 
   try {
     const payload = {
-      provider: 'ollama',
-      model: aiSettings.value.model || 'llama3.2',
-      base_url: aiSettings.value.base_url || 'http://127.0.0.1:11434',
-      api_key: undefined,
+      provider: 'groq',
+      model: aiSettings.value.model || 'llama-3.1-8b-instant',
+      api_key: aiSettings.value.api_key,
       system_prompt: aiSettings.value.system_prompt,
       message: 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.'
     }
@@ -265,7 +257,7 @@ onMounted(() => {
             <div class="space-y-2">
               <Label>AI Provider</Label>
               <div class="h-10 px-3 py-2 border border-input rounded-md bg-muted text-sm flex items-center text-muted-foreground">
-                Ollama Local
+                Groq Cloud
               </div>
             </div>
 
@@ -283,24 +275,25 @@ onMounted(() => {
                   {{ model.label }}
                 </option>
               </select>
-              <p class="text-xs text-muted-foreground">Pastikan model ini sudah terpasang di Ollama server.</p>
+              <p class="text-xs text-muted-foreground">Pilih model Groq yang tersedia di akun API Anda.</p>
             </div>
           </div>
 
           <div class="space-y-2">
-            <Label>Ollama Base URL</Label>
+            <Label>Groq API Key</Label>
             <Input
-              v-model="aiSettings.base_url"
-              placeholder="http://127.0.0.1:11434"
+              v-model="aiSettings.api_key"
+              type="password"
+              placeholder="Masukkan Groq API key"
             />
-            <p class="text-xs text-muted-foreground">Gunakan URL server Ollama yang bisa dijangkau Laravel.</p>
+            <p class="text-xs text-muted-foreground">API key disimpan di backend. Kosongkan jika tidak ingin mengganti.</p>
           </div>
 
-          <!-- Ollama Base Info -->
+          <!-- Groq Info -->
           <div class="space-y-2">
             <Label>Catatan</Label>
             <div class="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
-              Ollama tidak membutuhkan API key. Sambungan backend memakai <span class="font-medium text-foreground">OLLAMA_BASE_URL</span> dan model yang dipilih di bawah.
+              Ini memakai Groq cloud, jadi tidak perlu server lokal. Kalau ada limit, tinggal ganti model atau API key.
             </div>
           </div>
 
