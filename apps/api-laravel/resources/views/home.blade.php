@@ -103,6 +103,7 @@
             ['label' => 'Cerita Kami', 'href' => '#cerita'],
             ['label' => 'Produk', 'href' => '#produk'],
             ['label' => 'Harga', 'href' => '#harga'],
+            ['label' => 'Promo', 'href' => '/promo'],
             ['label' => 'FAQ', 'href' => '/faq'],
         ]);
         $headerCta = data_get($homepage, 'header_cta', [
