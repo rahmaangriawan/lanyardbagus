@@ -233,46 +233,99 @@
 
         <!-- Chat Box -->
         <div id="chat-box" class="chat-box" style="display: none;">
-            <div class="chat-header">
-                <div class="chat-header-info">
-                    <div class="chat-avatar">
-                        <i data-lucide="bot" class="w-5 h-5"></i>
+            <!-- User Info Form (shown first) -->
+            <div id="chat-user-form" class="chat-user-form">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="chat-avatar">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 id="chat-widget-title">Asisten Lanyard Bagus</h4>
+                            <span class="chat-status">Mulai Chat</span>
+                        </div>
                     </div>
-                    <div>
-                        <h4 id="chat-widget-title">Asisten Lanyard Bagus</h4>
-                        <span class="chat-status">
-                            <span class="status-dot"></span>
-                            Online
-                        </span>
-                    </div>
-                </div>
-                <button id="chat-close-btn" class="chat-close-btn" aria-label="Tutup chat">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div id="chat-messages" class="chat-messages">
-                <div class="chat-message bot-message">
-                    <div class="message-content">
-                        <p id="chat-welcome-message">Halo! 👋 Saya asisten Lanyard Bagus. Ada yang bisa saya bantu tentang lanyard custom?</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chat-input-area">
-                <form id="chat-form" class="chat-form">
-                    <input
-                        type="text"
-                        id="chat-input"
-                        class="chat-input"
-                        placeholder="Ketik pesan Anda..."
-                        maxlength="2000"
-                        required
-                    />
-                    <button type="submit" class="chat-send-btn" aria-label="Kirim pesan">
-                        <i data-lucide="send" class="w-5 h-5"></i>
+                    <button id="chat-close-btn" class="chat-close-btn" aria-label="Tutup chat">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
-                </form>
+                </div>
+                <div class="chat-user-form-content">
+                    <p class="chat-form-description">Silakan isi info Anda sebelum memulai chat</p>
+                    <form id="user-info-form" class="user-info-form">
+                        <div class="form-group">
+                            <label for="user-name">Nama Lengkap</label>
+                            <input
+                                type="text"
+                                id="user-name"
+                                name="user_name"
+                                class="form-input"
+                                placeholder="Masukkan nama Anda"
+                                required
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="user-whatsapp">Nomor WhatsApp</label>
+                            <input
+                                type="tel"
+                                id="user-whatsapp"
+                                name="user_whatsapp"
+                                class="form-input"
+                                placeholder="08xxxxxxxxxx"
+                                pattern="[0-9]{10,14}"
+                                required
+                            />
+                        </div>
+                        <button type="submit" class="start-chat-btn">
+                            Mulai Chat
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Chat Messages (shown after form submitted) -->
+            <div id="chat-messages-container" style="display: none;">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="chat-avatar">
+                            <i data-lucide="bot" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 id="chat-widget-title-2">Asisten Lanyard Bagus</h4>
+                            <span class="chat-status">
+                                <span class="status-dot"></span>
+                                Online
+                            </span>
+                        </div>
+                    </div>
+                    <button id="chat-close-btn-2" class="chat-close-btn" aria-label="Tutup chat">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div id="chat-messages" class="chat-messages">
+                    <div class="chat-message bot-message">
+                        <div class="message-content">
+                            <p id="chat-welcome-message">Halo! 👋 Saya asisten Lanyard Bagus. Ada yang bisa saya bantu tentang lanyard custom?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <form id="chat-form" class="chat-form">
+                        <input
+                            type="text"
+                            id="chat-input"
+                            class="chat-input"
+                            placeholder="Ketik pesan Anda..."
+                            maxlength="2000"
+                            required
+                        />
+                        <button type="submit" class="chat-send-btn" aria-label="Kirim pesan">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -586,6 +639,83 @@
                 right: 16px;
             }
         }
+
+        /* User Info Form Styles */
+        .chat-user-form {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-user-form-content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chat-form-description {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .user-info-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 9999px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: #f9fafb;
+        }
+
+        .form-input:focus {
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .start-chat-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+
+        .start-chat-btn:hover {
+            background: #2563eb;
+            transform: scale(1.02);
+        }
     </style>
 
     <script>
@@ -598,12 +728,20 @@
                 localStorage.setItem('chat_session_id', sessionId);
             }
 
+            // Get stored user info
+            const storedUserInfo = JSON.parse(localStorage.getItem('chat_user_info') || 'null');
+            let userInfo = storedUserInfo || null;
+
             const chatToggle = document.getElementById('chat-toggle-btn');
             const chatBox = document.getElementById('chat-box');
             const chatClose = document.getElementById('chat-close-btn');
+            const chatClose2 = document.getElementById('chat-close-btn-2');
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatMessages = document.getElementById('chat-messages');
+            const userForm = document.getElementById('user-info-form');
+            const userFormContainer = document.getElementById('chat-user-form');
+            const messagesContainer = document.getElementById('chat-messages-container');
 
             let isOpen = false;
             let isTyping = false;
@@ -621,6 +759,7 @@
 
                     if (settings.widget_title) {
                         document.getElementById('chat-widget-title').textContent = settings.widget_title;
+                        document.getElementById('chat-widget-title-2').textContent = settings.widget_title;
                     }
                     if (settings.welcome_message) {
                         document.getElementById('chat-welcome-message').textContent = settings.welcome_message;
@@ -654,13 +793,28 @@
                 }
             }
 
+            // Show appropriate view based on user info
+            function showChatView() {
+                if (userInfo) {
+                    userFormContainer.style.display = 'none';
+                    messagesContainer.style.display = 'flex';
+                    loadChatHistory();
+                } else {
+                    userFormContainer.style.display = 'flex';
+                    messagesContainer.style.display = 'none';
+                }
+            }
+
             function toggleChat() {
                 isOpen = !isOpen;
                 chatBox.style.display = isOpen ? 'flex' : 'none';
 
                 if (isOpen) {
-                    chatInput.focus();
-                    scrollToBottom();
+                    showChatView();
+                    if (userInfo) {
+                        chatInput.focus();
+                        scrollToBottom();
+                    }
                 }
             }
 
@@ -728,6 +882,8 @@
                         body: JSON.stringify({
                             message: message,
                             session_id: sessionId,
+                            user_name: userInfo?.name,
+                            user_email: userInfo?.whatsapp,
                         }),
                     });
 
@@ -747,9 +903,23 @@
                 isTyping = false;
             }
 
+            // Handle user info form submission
+            userForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('user-name').value.trim();
+                const whatsapp = document.getElementById('user-whatsapp').value.trim();
+
+                if (name && whatsapp) {
+                    userInfo = { name, whatsapp };
+                    localStorage.setItem('chat_user_info', JSON.stringify(userInfo));
+                    showChatView();
+                }
+            });
+
             // Event listeners
             chatToggle.addEventListener('click', toggleChat);
             chatClose.addEventListener('click', toggleChat);
+            chatClose2.addEventListener('click', toggleChat);
 
             chatForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -768,7 +938,6 @@
 
             // Initialize
             loadChatSettings();
-            loadChatHistory();
         })();
     </script>
 </body>

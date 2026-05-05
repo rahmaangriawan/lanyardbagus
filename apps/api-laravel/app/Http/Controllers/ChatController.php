@@ -48,7 +48,7 @@ class ChatController extends Controller
                 'message' => ['required', 'string', 'max:2000'],
                 'session_id' => ['required', 'string', 'max:64'],
                 'user_name' => ['nullable', 'string', 'max:100'],
-                'user_email' => ['nullable', 'email', 'max:100'],
+                'user_email' => ['nullable', 'string', 'max:100'],
             ]);
 
             // Get AI settings
