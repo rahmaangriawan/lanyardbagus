@@ -1390,6 +1390,8 @@
         }
 
         #chat-messages-container {
+            display: none;
+            flex-direction: column;
             min-height: 0;
             height: 100%;
         }
@@ -1466,6 +1468,9 @@
             padding: 16px;
             background: white;
             border-top: 1px solid #e5e7eb;
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
         }
 
         .chat-form {
