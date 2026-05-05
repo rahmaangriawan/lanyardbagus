@@ -44,11 +44,25 @@ const trainingData = ref([])
 // Provider models
 const providerModels = {
   groq: [
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-    { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
-    { value: 'gemma2-9b-it', label: 'gemma2-9b-it' },
-  ]
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
+    { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
+    { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
+  ],
+  openai: [
+    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+  ],
+  anthropic: [
+    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet' },
+    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
+  ],
+  google: [
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+  ],
 }
 
 const defaultPrompt = `Kamu adalah asisten AI untuk Lanyard Bagus, perusahaan pembuat lanyard custom berkualitas di Indonesia.
@@ -71,7 +85,7 @@ async function loadAISettings() {
   try {
     const res = await axios.get(`${API_URL}/api/admin/chat/settings`, { withCredentials: true })
     aiSettings.value = { ...aiSettings.value, ...res.data }
-    aiSettings.value.provider = 'groq'
+    aiSettings.value.provider = aiSettings.value.provider || 'groq'
     aiSettings.value.model = aiSettings.value.model || 'llama-3.1-8b-instant'
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
@@ -115,7 +129,7 @@ async function loadTrainingData() {
 async function saveSettings() {
   loading.value = true
   try {
-    aiSettings.value.provider = 'groq'
+    aiSettings.value.provider = aiSettings.value.provider || 'groq'
     aiSettings.value.model = aiSettings.value.model || 'llama-3.1-8b-instant'
 
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
@@ -134,7 +148,7 @@ async function testProvider() {
 
   try {
     const payload = {
-      provider: 'groq',
+      provider: aiSettings.value.provider || 'groq',
       model: aiSettings.value.model || 'llama-3.1-8b-instant',
       api_key: aiSettings.value.api_key,
       system_prompt: aiSettings.value.system_prompt,
@@ -256,9 +270,15 @@ onMounted(() => {
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label>AI Provider</Label>
-              <div class="h-10 px-3 py-2 border border-input rounded-md bg-muted text-sm flex items-center text-muted-foreground">
-                Groq Cloud
-              </div>
+              <select
+                v-model="aiSettings.provider"
+                class="w-full h-10 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="groq">Groq Cloud</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="google">Google (Gemini)</option>
+              </select>
             </div>
 
             <div class="space-y-2">
@@ -275,25 +295,26 @@ onMounted(() => {
                   {{ model.label }}
                 </option>
               </select>
-              <p class="text-xs text-muted-foreground">Pilih model Groq yang tersedia di akun API Anda.</p>
+              <p class="text-xs text-muted-foreground">Pilih model yang tersedia di akun API Anda.</p>
             </div>
           </div>
 
           <div class="space-y-2">
-            <Label>Groq API Key</Label>
+            <Label>API Key</Label>
             <Input
               v-model="aiSettings.api_key"
               type="password"
-              placeholder="Masukkan Groq API key"
+              placeholder="sk-... / gsk_... / ant-..."
             />
             <p class="text-xs text-muted-foreground">API key disimpan di backend. Kosongkan jika tidak ingin mengganti.</p>
           </div>
 
-          <!-- Groq Info -->
+          <!-- Provider Info -->
           <div class="space-y-2">
             <Label>Catatan</Label>
             <div class="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
-              Ini memakai Groq cloud, jadi tidak perlu server lokal. Kalau ada limit, tinggal ganti model atau API key.
+              Pilih provider yang ingin digunakan. Setiap provider memiliki model dan harga yang berbeda.
+              Groq = gratis tier tersedia, OpenAI = bayar per token, Anthropic = Claude series, Google = Gemini series.
             </div>
           </div>
 

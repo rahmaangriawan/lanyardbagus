@@ -218,7 +218,7 @@ class ChatController extends Controller
     {
         $validated = $request->validate([
             'enabled' => ['required', 'boolean'],
-            'provider' => ['required', 'string', 'in:groq'],
+            'provider' => ['required', 'string', 'in:groq,openai,anthropic,google'],
             'model' => ['required', 'string'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['required', 'string', 'max:5000'],
@@ -227,7 +227,7 @@ class ChatController extends Controller
         ]);
 
         Setting::set('ai_enabled', $validated['enabled'] ? 'true' : 'false', 'ai');
-        Setting::set('ai_provider', 'groq', 'ai');
+        Setting::set('ai_provider', $validated['provider'], 'ai');
         Setting::set('ai_model', $validated['model'], 'ai');
         if ($validated['api_key'] && $validated['api_key'] !== '***') {
             Setting::set('ai_api_key', $validated['api_key'], 'ai');
@@ -245,7 +245,7 @@ class ChatController extends Controller
     public function testProvider(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'provider' => ['nullable', 'string', 'in:groq'],
+            'provider' => ['nullable', 'string', 'in:groq,openai,anthropic,google'],
             'model' => ['nullable', 'string'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['nullable', 'string', 'max:5000'],
@@ -290,6 +290,12 @@ class ChatController extends Controller
     {
         try {
             switch ($provider) {
+                case 'openai':
+                    return $this->callOpenAI($apiKey, $model, $messages);
+                case 'anthropic':
+                    return $this->callAnthropic($apiKey, $model, $messages);
+                case 'google':
+                    return $this->callGoogle($apiKey, $model, $messages);
                 case 'groq':
                 default:
                     return $this->callGroq($apiKey, $model, $messages);
@@ -543,17 +549,27 @@ class ChatController extends Controller
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
     {
-        return 'groq';
+        $allowed = ['groq', 'openai', 'anthropic', 'google'];
+        $provider = in_array($storedProvider, $allowed, true) ? $storedProvider : 'groq';
+
+        return $provider;
     }
 
     private function resolveModel(string $provider, ?string $storedModel): string
     {
         $storedModel = trim((string) $storedModel);
 
-        return match ($provider) {
-            'groq' => $storedModel !== '' ? $storedModel : (string) config('services.groq.model', 'llama-3.1-8b-instant'),
-            default => $this->normalizeGoogleModel($storedModel),
-        };
+        if ($storedModel === '') {
+            return match ($provider) {
+                'groq' => (string) config('services.groq.model', 'llama-3.1-8b-instant'),
+                'openai' => 'gpt-4o-mini',
+                'anthropic' => 'claude-3-haiku-20240307',
+                'google' => 'gemini-1.5-flash',
+                default => (string) config('services.groq.model', 'llama-3.1-8b-instant'),
+            };
+        }
+
+        return $provider === 'google' ? $this->normalizeGoogleModel($storedModel) : $storedModel;
     }
 
     private function fallbackReply(string $message): string
