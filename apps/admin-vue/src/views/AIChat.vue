@@ -1,12 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { Button } from '../components/ui'
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
-import { Input } from '../components/ui/Input'
-import { Label } from '../components/ui/Label'
+import { Button, Card, Input, Label, Badge } from '../components/ui'
 import { Textarea } from '../components/ui/Textarea'
-import { Badge } from '../components/ui/Badge'
 import {
   Select,
   SelectContent,
@@ -221,13 +217,13 @@ onMounted(() => {
     <!-- Settings Tab -->
     <div v-if="activeTab === 'settings'" class="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
             <Bot class="w-5 h-5" />
             Konfigurasi AI
-          </CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-6">
+          </h3>
+        </div>
+        <div class="p-6 pt-0 space-y-6">
           <!-- Enable/Disable -->
           <div class="flex items-center justify-between p-4 border rounded-lg">
             <div>
@@ -328,7 +324,7 @@ onMounted(() => {
               Tersimpan!
             </Badge>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
 
@@ -336,10 +332,10 @@ onMounted(() => {
     <div v-if="activeTab === 'sessions'" class="grid grid-cols-3 gap-6">
       <!-- Sessions List -->
       <Card class="col-span-1">
-        <CardHeader>
-          <CardTitle class="text-base">Sessions</CardTitle>
-        </CardHeader>
-        <CardContent class="p-0">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight text-base">Sessions</h3>
+        </div>
+        <div class="p-0">
           <div class="divide-y max-h-[600px] overflow-auto">
             <button
               v-for="session in sessions"
@@ -358,21 +354,21 @@ onMounted(() => {
           <div v-if="sessions.length === 0" class="p-8 text-center text-muted-foreground">
             Belum ada sesi chat
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <!-- Session Messages -->
       <Card class="col-span-2">
-        <CardHeader>
-          <CardTitle class="text-base flex items-center gap-2">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight text-base flex items-center gap-2">
             <MessageSquare class="w-4 h-4" />
             Messages
             <span v-if="selectedSession" class="text-xs font-normal text-muted-foreground">
               ({{ sessionMessages.length }} messages)
             </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div class="p-6 pt-0">
           <div v-if="selectedSession" class="space-y-4 max-h-[500px] overflow-auto">
             <div
               v-for="msg in sessionMessages"
@@ -416,20 +412,20 @@ onMounted(() => {
           <div v-else class="text-center text-muted-foreground py-12">
             Pilih sesi untuk melihat detail percakapan
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
 
     <!-- Training Data Tab -->
     <div v-if="activeTab === 'training'">
       <Card>
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2">
+        <div class="flex flex-col space-y-1.5 p-6">
+          <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
             <Database class="w-5 h-5" />
             Training Dataset ({{ trainingData.length }} items)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div class="p-6 pt-0">
           <div class="space-y-4">
             <div
               v-for="item in trainingData"
@@ -463,7 +459,7 @@ onMounted(() => {
           <div v-if="trainingData.length === 0" class="text-center text-muted-foreground py-12">
             Belum ada data training. Tandai pesan dari sesi chat sebagai training data.
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   </div>
