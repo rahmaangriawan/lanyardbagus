@@ -49,6 +49,39 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         details summary::-webkit-details-marker { display: none; }
+
+        /* ── Mega Menu ── */
+        .mega-menu-wrap { position: relative; }
+        .mega-menu-wrap::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 8px; }
+        .mega-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            z-index: 60;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(-6px);
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+        }
+        .mega-menu-wrap:hover .mega-dropdown,
+        .mega-menu-wrap:focus-within .mega-dropdown {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .mega-dropdown-inner {
+            background: #fff;
+            border: 1px solid #dee1e6;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(10,11,13,0.10), 0 2px 8px rgba(10,11,13,0.06);
+            padding: 16px;
+            width: 480px;
+            max-width: calc(100vw - 48px);
+        }
+        .mega-menu-wrap .mega-chevron { transition: transform 0.18s ease; }
+        .mega-menu-wrap:hover .mega-chevron { transform: rotate(180deg); }
+        details.mobile-mega-item > summary .mobile-chevron { transition: transform 0.2s ease; }
+        details.mobile-mega-item[open] > summary .mobile-chevron { transform: rotate(180deg); }
     </style>
     <!-- Homepage Schemas -->
     <script type="application/ld+json">
@@ -217,7 +250,16 @@
         ]);
     @endphp
 
-    <!-- Top Navigation — Light -->
+    @php
+        // Load featured products for mega menu
+        $megaFeaturedProducts = \App\Models\Product::with('category')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->limit(4)
+            ->get(['id', 'name', 'price', 'images', 'category_id']);
+    @endphp
+
+    <!-- Top Navigation -->
     <header class="fixed top-0 left-0 right-0 z-50 nav-glass border-b border-cb-hairline">
         <div class="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center">
@@ -230,20 +272,44 @@
                 </a>
             </div>
 
-            <nav class="hidden md:flex items-center gap-6">
+            <!-- Desktop Mega Menu Navigation -->
+            <nav class="hidden md:flex items-center gap-1 relative">
                 @foreach($navLinks as $link)
-                    <a href="{{ data_get($link, 'href', '#') }}" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors">
-                        {{ data_get($link, 'label', 'Menu') }}
-                    </a>
+                    @php
+                        $label = data_get($link, 'label', 'Menu');
+                        $href  = data_get($link, 'href', '#');
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog'])
+                            || str_contains(strtolower($href), 'produk')
+                            || str_contains(strtolower($href), 'katalog')
+                            || str_contains(strtolower($href), 'product');
+                    @endphp
+                    @if($isMega)
+                        <div class="mega-menu-wrap">
+                            <button type="button" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors px-3 py-2 rounded-lg hover:bg-cb-surface-soft flex items-center gap-1 cursor-default" aria-haspopup="true">
+                                {{ $label }}
+                                <svg class="mega-chevron w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div class="mega-dropdown" role="menu">
+                                <div class="mega-dropdown-inner">
+                                    @include('partials.mega-menu-products')</div>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ $href }}" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors px-3 py-2 rounded-lg hover:bg-cb-surface-soft">
+                            {{ $label }}
+                            @if($label === 'FAQ')
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cb-blue/10 text-cb-blue">Baru</span>
+                            @endif
+                        </a>
+                    @endif
                 @endforeach
             </nav>
 
             <div class="flex items-center gap-3">
                 <!-- Desktop CTA -->
-                <a href="{{ data_get($headerCta, 'href', '#hubungi') }}" class="!hidden md:!inline-flex bg-cb-blue text-white px-5 py-2.5 rounded-cb-pill text-sm font-semibold hover:bg-cb-blue-active transition-colors">
+                <a href="{{ data_get($headerCta, 'href', '#hubungi') }}" class="hidden md:inline-flex bg-cb-blue text-white px-5 py-2.5 rounded-cb-pill text-sm font-semibold hover:bg-cb-blue-active transition-colors">
                     {{ data_get($headerCta, 'label', 'Pesan Sekarang') }}
                 </a>
-
                 <!-- Mobile Hamburger -->
                 <button id="mobile-menu-btn" class="md:hidden flex p-2 text-cb-ink transition-transform duration-300" aria-label="Menu">
                     <svg id="menu-icon-hamburger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,19 +324,66 @@
     </header>
 
     <!-- Mobile Menu Backdrop -->
-    <div id="mobile-menu-backdrop" class="fixed inset-0 z-[55] bg-cb-ink/20 backdrop-blur-sm hidden animate-in fade-in duration-300"></div>
+    <div id="mobile-menu-backdrop" class="fixed inset-0 z-[55] bg-cb-ink/20 backdrop-blur-sm hidden"></div>
 
-    <!-- Mobile Menu Overlay (Dropdown Style) -->
-    <div id="mobile-menu-overlay" class="fixed top-16 left-0 right-0 z-[60] bg-white hidden flex-col shadow-2xl border-b border-cb-hairline animate-in slide-in-from-top duration-300">
-        <div class="overflow-y-auto px-6 py-8 flex flex-col gap-8">
-            <nav class="flex flex-col gap-6">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu-overlay" class="fixed top-16 left-0 right-0 z-[60] bg-white hidden flex-col shadow-2xl border-b border-cb-hairline max-h-[calc(100vh-64px)] overflow-y-auto">
+        <div class="px-6 py-6 flex flex-col gap-6">
+            <nav class="flex flex-col gap-1">
                 @foreach($navLinks as $link)
-                    <a href="{{ data_get($link, 'href', '#') }}" class="text-xl font-normal text-cb-ink mobile-menu-link">
-                        {{ data_get($link, 'label', 'Menu') }}
-                    </a>
+                    @php
+                        $label = data_get($link, 'label', 'Menu');
+                        $href  = data_get($link, 'href', '#');
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog'])
+                            || str_contains(strtolower($href), 'produk')
+                            || str_contains(strtolower($href), 'katalog')
+                            || str_contains(strtolower($href), 'product');
+                    @endphp
+                    @if($isMega)
+                        <details class="mobile-mega-item">
+                            <summary class="list-none cursor-pointer flex items-center justify-between py-3 text-lg font-normal text-cb-ink select-none">
+                                <span>{{ $label }}</span>
+                                <svg class="mobile-chevron w-4 h-4 text-cb-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+                            <div class="pb-3 ml-2 mt-1">
+                                <div class="grid grid-cols-3 gap-2">
+                                    @foreach($megaFeaturedProducts as $fp)
+                                        @php
+                                            $fpImg = (is_array($fp->images) && count($fp->images) > 0)
+                                                ? $fp->images[0]
+                                                : ($fp->category?->image ?? null);
+                                        @endphp
+                                        <a href="/order?product_id={{ $fp->id }}" class="flex flex-col rounded-cb-sm overflow-hidden border border-cb-hairline mobile-menu-link">
+                                            <div class="w-full aspect-square bg-cb-surface-soft overflow-hidden">
+                                                @if($fpImg)
+                                                    <img src="{{ $fpImg }}" alt="{{ $fp->name }}" class="w-full h-full object-cover" loading="lazy">
+                                                @else
+                                                    <div class="w-full h-full flex items-center justify-center text-cb-muted-soft">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z"/></svg>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="px-2 py-1.5 bg-white">
+                                                <p class="text-[11px] font-medium text-cb-ink leading-tight truncate">{{ $fp->name }}</p>
+                                                <p class="text-[10px] text-cb-muted">Rp {{ number_format($fp->price, 0, ',', '.') }}/pcs</p>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                                <a href="/katalog" class="mt-2 block text-sm font-medium text-cb-blue mobile-menu-link">Lihat Semua Produk →</a>
+                            </div>
+                        </details>
+                    @else
+                        <a href="{{ $href }}" class="py-3 text-lg font-normal text-cb-ink mobile-menu-link">
+                            {{ $label }}
+                            @if($label === 'FAQ')
+                                <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cb-blue/10 text-cb-blue">Baru</span>
+                            @endif
+                        </a>
+                    @endif
                 @endforeach
             </nav>
-            <div class="pt-8 border-t border-cb-hairline">
+            <div class="pt-4 border-t border-cb-hairline">
                 <a href="{{ data_get($headerCta, 'href', '#hubungi') }}" class="w-full bg-cb-blue text-white py-4 rounded-cb-lg text-center font-normal block shadow-lg shadow-cb-blue/20 mobile-menu-link">
                     {{ data_get($headerCta, 'label', 'Pesan Sekarang') }}
                 </a>
