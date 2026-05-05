@@ -15,18 +15,26 @@ class ChatController extends Controller
      */
     public function history(Request $request): JsonResponse
     {
-        $sessionId = $request->header('X-Session-ID') ?: $request->input('session_id');
-        
-        if (!$sessionId) {
+        try {
+            $sessionId = $request->header('X-Session-ID') ?: $request->input('session_id');
+
+            if (! $sessionId) {
+                return response()->json(['messages' => []]);
+            }
+
+            $messages = ChatMessage::bySession($sessionId)
+                ->orderBy('created_at', 'asc')
+                ->limit(50)
+                ->get(['id', 'message', 'response', 'role', 'created_at']);
+
+            return response()->json(['messages' => $messages]);
+        } catch (\Throwable $e) {
+            \Log::warning('Chat history lookup failed', [
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json(['messages' => []]);
         }
-
-        $messages = ChatMessage::bySession($sessionId)
-            ->orderBy('created_at', 'asc')
-            ->limit(50)
-            ->get(['id', 'message', 'response', 'role', 'created_at']);
-
-        return response()->json(['messages' => $messages]);
     }
 
     /**
@@ -34,79 +42,89 @@ class ChatController extends Controller
      */
     public function send(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'message' => ['required', 'string', 'max:2000'],
-            'session_id' => ['required', 'string', 'max:64'],
-            'user_name' => ['nullable', 'string', 'max:100'],
-            'user_email' => ['nullable', 'email', 'max:100'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'message' => ['required', 'string', 'max:2000'],
+                'session_id' => ['required', 'string', 'max:64'],
+                'user_name' => ['nullable', 'string', 'max:100'],
+                'user_email' => ['nullable', 'email', 'max:100'],
+            ]);
 
-        // Get AI settings
-        $apiKey = Setting::get('ai_api_key');
-        $provider = $this->resolveProvider(Setting::get('ai_provider', 'openai'), $apiKey);
-        $model = Setting::get('ai_model', $provider === 'google' ? 'gemini-1.5-flash' : 'gpt-4o-mini');
-        $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
-        $enabled = Setting::get('ai_enabled', 'true');
+            // Get AI settings
+            $apiKey = Setting::get('ai_api_key');
+            $provider = $this->resolveProvider(Setting::get('ai_provider', 'openai'), $apiKey);
+            $model = $this->resolveModel($provider, Setting::get('ai_model'));
+            $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
+            $enabled = Setting::get('ai_enabled', 'true');
 
-        if ($enabled === 'false' || !$apiKey) {
-            return response()->json([
-                'message' => 'Maaf, layanan chat AI sedang tidak tersedia. Silakan hubungi kami via WhatsApp.'
-            ], 503);
-        }
-
-        // Get recent conversation history for context
-        $history = ChatMessage::bySession($validated['session_id'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get(['role', 'message', 'response'])
-            ->reverse()
-            ->values();
-
-        // Build messages array for AI
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt]
-        ];
-
-        foreach ($history as $chat) {
-            $messages[] = ['role' => 'user', 'content' => $chat->message];
-            if ($chat->response) {
-                $messages[] = ['role' => 'assistant', 'content' => $chat->response];
+            if ($enabled === 'false' || ! $apiKey) {
+                return response()->json([
+                    'message' => 'Maaf, layanan chat AI sedang tidak tersedia. Silakan hubungi kami via WhatsApp.'
+                ], 503);
             }
-        }
 
-        $messages[] = ['role' => 'user', 'content' => $validated['message']];
+            // Get recent conversation history for context
+            $history = ChatMessage::bySession($validated['session_id'])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get(['role', 'message', 'response'])
+                ->reverse()
+                ->values();
 
-        // Call AI API (OpenAI compatible)
-        $response = $this->callAI($provider, $apiKey, $model, $messages);
+            // Build messages array for AI
+            $messages = [
+                ['role' => 'system', 'content' => $systemPrompt]
+            ];
 
-        if (!$response['success']) {
-            \Log::warning('AI chat provider request failed', [
-                'provider' => $provider,
-                'model' => $model,
-                'error' => $response['error'] ?? null,
+            foreach ($history as $chat) {
+                $messages[] = ['role' => 'user', 'content' => $chat->message];
+                if ($chat->response) {
+                    $messages[] = ['role' => 'assistant', 'content' => $chat->response];
+                }
+            }
+
+            $messages[] = ['role' => 'user', 'content' => $validated['message']];
+
+            // Call AI API (OpenAI compatible)
+            $response = $this->callAI($provider, $apiKey, $model, $messages);
+
+            if (! $response['success']) {
+                \Log::warning('AI chat provider request failed', [
+                    'provider' => $provider,
+                    'model' => $model,
+                    'error' => $response['error'] ?? null,
+                ]);
+
+                return response()->json([
+                    'message' => $this->fallbackReply($validated['message'])
+                ]);
+            }
+
+            // Save to database
+            $chatMessage = ChatMessage::create([
+                'session_id' => $validated['session_id'],
+                'user_name' => $validated['user_name'] ?? null,
+                'user_email' => $validated['user_email'] ?? null,
+                'message' => $validated['message'],
+                'role' => 'user',
+                'response' => $response['content'],
+                'ai_model' => $model,
+                'tokens_used' => $response['tokens'] ?? null,
             ]);
 
             return response()->json([
-                'message' => 'Maaf, layanan AI sedang bermasalah. Periksa provider/model/API key di menu AI Chat.'
-            ], 500);
+                'message' => $response['content'],
+                'id' => $chatMessage->id,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Chat send failed unexpectedly', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => $this->fallbackReply($request->input('message', ''))
+            ]);
         }
-
-        // Save to database
-        $chatMessage = ChatMessage::create([
-            'session_id' => $validated['session_id'],
-            'user_name' => $validated['user_name'] ?? null,
-            'user_email' => $validated['user_email'] ?? null,
-            'message' => $validated['message'],
-            'role' => 'user',
-            'response' => $response['content'],
-            'ai_model' => $model,
-            'tokens_used' => $response['tokens'] ?? null,
-        ]);
-
-        return response()->json([
-            'message' => $response['content'],
-            'id' => $chatMessage->id,
-        ]);
     }
 
     /**
@@ -349,6 +367,36 @@ class ChatController extends Controller
         return in_array($storedProvider, ['openai', 'anthropic', 'google'], true)
             ? $storedProvider
             : 'openai';
+    }
+
+    private function resolveModel(string $provider, ?string $storedModel): string
+    {
+        $storedModel = trim((string) $storedModel);
+
+        return match ($provider) {
+            'google' => str_starts_with($storedModel, 'gemini-') ? $storedModel : 'gemini-1.5-flash',
+            'anthropic' => str_starts_with($storedModel, 'claude-') ? $storedModel : 'claude-3-5-sonnet-latest',
+            default => $storedModel !== '' ? $storedModel : 'gpt-4o-mini',
+        };
+    }
+
+    private function fallbackReply(string $message): string
+    {
+        $lowerMessage = mb_strtolower($message);
+
+        if (str_contains($lowerMessage, 'harga') || str_contains($lowerMessage, 'biaya')) {
+            return 'Untuk estimasi harga lanyard custom, silakan kirim jumlah pcs, ukuran, dan model yang diinginkan. Tim kami akan bantu hitungkan opsi terbaik.';
+        }
+
+        if (str_contains($lowerMessage, 'waktu') || str_contains($lowerMessage, 'lama')) {
+            return 'Waktu produksi umumnya 3-7 hari kerja tergantung jumlah dan jenis produk. Kalau mendesak, kami bisa cek opsi prioritas.';
+        }
+
+        if (str_contains($lowerMessage, 'desain') || str_contains($lowerMessage, 'logo')) {
+            return 'Bisa, kami bantu cek desain dan rekomendasi material yang paling cocok. Kirim detail kebutuhan Anda supaya kami arahkan lebih tepat.';
+        }
+
+        return 'Saya belum bisa menjawab dengan AI saat ini, tapi tim Lanyard Bagus siap bantu lewat WhatsApp. Kirim kebutuhan Anda, nanti kami arahkan ke pilihan yang paling cocok.';
     }
 
     private function getDefaultSystemPrompt(): string
