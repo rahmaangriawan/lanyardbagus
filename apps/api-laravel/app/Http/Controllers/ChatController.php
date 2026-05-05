@@ -52,7 +52,7 @@ class ChatController extends Controller
             ]);
 
             // Get AI settings
-            $apiKey = Setting::get('ai_api_key');
+            $apiKey = Setting::get('ai_api_key', config('services.groq.api_key', env('GROQ_API_KEY')));
             $provider = $this->resolveProvider(Setting::get('ai_provider', 'groq'), $apiKey);
             $model = $this->resolveModel($provider, Setting::get('ai_model'));
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
@@ -253,6 +253,8 @@ class ChatController extends Controller
         ]);
 
         $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key')));
+        $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key', config('services.groq.api_key', env('GROQ_API_KEY')))));
+        $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key', config('services.groq.api_key', env('GROQ_API_KEY')))));
         $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'groq');
         $provider = $this->resolveProvider($storedProvider, $apiKey);
         $model = $this->resolveModel($provider, $validated['model'] ?? Setting::get('ai_model'));

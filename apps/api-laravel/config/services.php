@@ -38,6 +38,7 @@ return [
     'groq' => [
         'base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
         'model' => env('GROQ_MODEL', 'llama-3.1-8b-instant'),
+        'api_key' => env('GROQ_API_KEY'),
     ],
 
     'ollama' => [
