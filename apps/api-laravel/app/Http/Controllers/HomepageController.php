@@ -71,7 +71,7 @@ class HomepageController extends Controller
         return [
             'navigation_links' => [
                 ['label' => 'Beranda', 'href' => '#beranda'],
-                ['label' => 'Cerita Kami', 'href' => '#cerita'],
+                ['label' => 'Jenis', 'href' => '/jenis'],
                 ['label' => 'Produk', 'href' => '#produk'],
                 ['label' => 'Harga', 'href' => '#harga'],
                 ['label' => 'Promo', 'href' => '/promo'],

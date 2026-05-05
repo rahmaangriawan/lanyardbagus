@@ -74,7 +74,7 @@
         $homepage = optional($settings)->homepage_data ?? [];
         $navLinks = data_get($homepage, 'navigation_links', [
             ['label' => 'Beranda', 'href' => '/#beranda'],
-            ['label' => 'Cerita Kami', 'href' => '/#cerita'],
+            ['label' => 'Jenis', 'href' => '/jenis'],
             ['label' => 'Produk', 'href' => '/#produk'],
             ['label' => 'Harga', 'href' => '/#harga'],
             ['label' => 'Promo', 'href' => '/promo'],
