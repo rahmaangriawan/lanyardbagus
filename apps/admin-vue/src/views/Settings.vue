@@ -341,25 +341,44 @@ async function deleteRedirect(redirect) {
       
       <!-- Verification Tab -->
       <div v-if="activeTab === 'verification'" class="space-y-6">
+        <div class="p-4 bg-secondary/50 rounded-lg">
+          <p class="text-sm text-muted-foreground">
+            Masukkan <strong>hanya kode verification</strong> (bukan seluruh tag HTML). Sistem akan otomatis menghasilkan meta tag yang benar di website.
+          </p>
+        </div>
+
         <div class="space-y-2">
           <Label>Google Search Console</Label>
-          <Input v-model="verification.google_search_console" placeholder="google-site-verification=..." />
-          <p class="text-xs text-muted-foreground">Masukkan meta tag verification</p>
+          <Input v-model="verification.google_search_console" placeholder="AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef" />
+          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa <meta ...>)</p>
         </div>
-        
+
         <div class="space-y-2">
           <Label>Google Analytics</Label>
           <Input v-model="verification.google_analytics" placeholder="G-XXXXXXXXXX atau UA-XXXXXXXX-X" />
+          <p class="text-xs text-muted-foreground">Tracking ID untuk Google Analytics 4 (GA4)</p>
         </div>
-        
+
         <div class="space-y-2">
           <Label>Facebook Domain Verification</Label>
           <Input v-model="verification.facebook_domain_verification" placeholder="facebook-domain-verification=..." />
         </div>
-        
+
         <div class="space-y-2">
           <Label>Bing Webmaster</Label>
-          <Input v-model="verification.bing_webmaster" placeholder="msvalidate.01=..." />
+          <Input v-model="verification.bing_webmaster" placeholder="AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef" />
+          <p class="text-xs text-muted-foreground">Contoh: AbCdEfGhIjKlMnOpQrStUvWxYz1234567890abcdef (hanya kode, tanpa <meta ...>)</p>
+        </div>
+
+        <!-- Live preview of meta tags -->
+        <div v-if="verification.google_search_console || verification.bing_webmaster" class="border rounded-lg p-4 space-y-2 bg-muted/30">
+          <p class="text-sm font-medium">Preview Meta Tag di Website:</p>
+          <code v-if="verification.google_search_console" class="block text-xs font-mono bg-black/5 dark:bg-white/5 p-2 rounded">
+            &lt;meta name="google-site-verification" content="{{ verification.google_search_console }}"&gt;
+          </code>
+          <code v-if="verification.bing_webmaster" class="block text-xs font-mono bg-black/5 dark:bg-white/5 p-2 rounded">
+            &lt;meta name="msvalidate.01" content="{{ verification.bing_webmaster }}"&gt;
+          </code>
         </div>
       </div>
       

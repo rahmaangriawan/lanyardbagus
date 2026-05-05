@@ -41,10 +41,16 @@ class SiteSettingController extends Controller
             'bing_site_verification'    => ['nullable', 'string', 'max:255'],
         ]);
 
+        $data['google_site_verification'] = $this->cleanVerification($data['google_site_verification'] ?? null);
+        $data['bing_site_verification']   = $this->cleanVerification($data['bing_site_verification'] ?? null);
+
         $settings = $this->getSingleton();
         $settings->fill($data);
         $settings->save();
         $settings->load(['homepageOgImage:id,url,file_name', 'logoImage:id,url,file_name', 'faviconImage:id,url,file_name']);
+
+        // Clear caches so verification meta tags appear immediately
+        \Illuminate\Support\Facades\Cache::flush();
 
         return response()->json($this->serialize($settings));
     }
@@ -95,6 +101,30 @@ class SiteSettingController extends Controller
             'google_site_verification'  => $settings->google_site_verification,
             'bing_site_verification'    => $settings->bing_site_verification,
         ];
+    }
+
+    private function cleanVerification(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        // Strip full HTML meta tag if user pasted the whole thing
+        if (str_starts_with($value, '<meta')) {
+            if (preg_match('/content=["\']([^"\']+)["\']/', $value, $matches)) {
+                $value = $matches[1];
+            }
+        }
+
+        // Strip common prefixes like google-site-verification=... or msvalidate.01=...
+        $value = preg_replace('/^(google-site-verification|msvalidate\.01)=/i', '', $value);
+
+        // Strip quotes and extra whitespace
+        $value = trim($value, " \t\n\r\0\x0B\"'");
+
+        return $value === '' ? null : $value;
     }
 
     private function defaultPayload(): array
