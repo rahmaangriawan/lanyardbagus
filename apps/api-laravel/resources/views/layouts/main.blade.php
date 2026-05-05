@@ -90,18 +90,88 @@
                 </a>
             </div>
 
-            <!-- Desktop Navigation -->
-            <nav class="hidden md:flex items-center gap-6">
+            <!-- Desktop Mega Menu Navigation -->
+            <nav class="hidden md:flex items-center gap-1 relative">
                 @foreach($navLinks as $link)
                     @php
+                        $label = data_get($link, 'label', 'Menu');
                         $href = data_get($link, 'href', '#');
                         if (str_starts_with($href, '#')) {
                             $href = '/' . $href;
                         }
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']);
                     @endphp
-                    <a href="{{ $href }}" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors">
-                        {{ data_get($link, 'label', 'Menu') }}
-                    </a>
+                    @if($isMega)
+                        <div class="mega-menu-wrap relative" onmouseenter="this.querySelector('.mega-dropdown').classList.remove('hidden')" onmouseleave="this.querySelector('.mega-dropdown').classList.add('hidden')">
+                            <a href="{{ $href }}" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors px-3 py-2 rounded-lg hover:bg-cb-surface-soft flex items-center gap-1">
+                                {{ $label }}
+                                <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </a>
+                            <div class="mega-dropdown hidden absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50">
+                                <div class="bg-white border border-cb-hairline rounded-2xl shadow-xl p-6 w-[640px] grid grid-cols-3 gap-6">
+                                    <div class="col-span-1">
+                                        <h4 class="text-xs font-semibold text-cb-muted uppercase tracking-widest mb-3">Kategori</h4>
+                                        <div class="flex flex-col gap-2">
+                                            <a href="/katalog/lanyard" class="text-sm text-cb-body hover:text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors">Lanyard Custom</a>
+                                            <a href="/katalog/wristband" class="text-sm text-cb-body hover:text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors">Wristband Lanyard</a>
+                                            <a href="/katalog/keychain" class="text-sm text-cb-body hover:text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors">Keychain Lanyard</a>
+                                            <a href="/katalog/id-card" class="text-sm text-cb-body hover:text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors">ID Card</a>
+                                            <a href="/katalog/card-holder" class="text-sm text-cb-body hover:text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors">Card Holder</a>
+                                            <a href="/katalog" class="text-sm font-medium text-cb-blue py-1.5 px-2 rounded-lg hover:bg-cb-surface-soft transition-colors mt-1">Lihat Semua Produk →</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2 border-l border-cb-hairline pl-6">
+                                        <h4 class="text-xs font-semibold text-cb-muted uppercase tracking-widest mb-3">Produk Unggulan</h4>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <a href="/order?product_id=1" class="group flex items-center gap-3 p-2.5 rounded-xl hover:bg-cb-surface-soft transition-colors border border-transparent hover:border-cb-hairline">
+                                                <div class="w-10 h-10 rounded-lg bg-cb-surface-soft flex items-center justify-center text-cb-blue group-hover:bg-cb-blue group-hover:text-white transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-cb-ink group-hover:text-cb-blue">Lanyard Custom</p>
+                                                    <p class="text-xs text-cb-muted">Mulai Rp 10.000/pcs</p>
+                                                </div>
+                                            </a>
+                                            <a href="/order?product_id=2" class="group flex items-center gap-3 p-2.5 rounded-xl hover:bg-cb-surface-soft transition-colors border border-transparent hover:border-cb-hairline">
+                                                <div class="w-10 h-10 rounded-lg bg-cb-surface-soft flex items-center justify-center text-cb-blue group-hover:bg-cb-blue group-hover:text-white transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-cb-ink group-hover:text-cb-blue">Wristband</p>
+                                                    <p class="text-xs text-cb-muted">Mulai Rp 8.000/pcs</p>
+                                                </div>
+                                            </a>
+                                            <a href="/order?product_id=4" class="group flex items-center gap-3 p-2.5 rounded-xl hover:bg-cb-surface-soft transition-colors border border-transparent hover:border-cb-hairline">
+                                                <div class="w-10 h-10 rounded-lg bg-cb-surface-soft flex items-center justify-center text-cb-blue group-hover:bg-cb-blue group-hover:text-white transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-cb-ink group-hover:text-cb-blue">ID Card PVC</p>
+                                                    <p class="text-xs text-cb-muted">Mulai Rp 15.000/pcs</p>
+                                                </div>
+                                            </a>
+                                            <a href="/katalog" class="group flex items-center gap-3 p-2.5 rounded-xl hover:bg-cb-surface-soft transition-colors border border-transparent hover:border-cb-hairline">
+                                                <div class="w-10 h-10 rounded-lg bg-cb-surface-soft flex items-center justify-center text-cb-blue group-hover:bg-cb-blue group-hover:text-white transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-cb-ink group-hover:text-cb-blue">Lihat Semua</p>
+                                                    <p class="text-xs text-cb-muted">Jelajahi katalog lengkap</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ $href }}" class="text-sm font-medium text-cb-body hover:text-cb-ink transition-colors px-3 py-2 rounded-lg hover:bg-cb-surface-soft">
+                            {{ $label }}
+                            @if($label === 'FAQ')
+                                <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cb-blue/10 text-cb-blue">Baru</span>
+                            @endif
+                        </a>
+                    @endif
                 @endforeach
             </nav>
 
@@ -133,23 +203,51 @@
     <!-- Mobile Menu Backdrop -->
     <div id="mobile-menu-backdrop" class="fixed inset-0 z-[55] bg-cb-ink/20 backdrop-blur-sm hidden animate-in fade-in duration-300"></div>
 
-    <!-- Mobile Menu Overlay (Dropdown Style) -->
-    <div id="mobile-menu-overlay" class="fixed top-16 left-0 right-0 z-[60] bg-white hidden flex-col shadow-2xl border-b border-cb-hairline animate-in slide-in-from-top duration-300">
-        <div class="overflow-y-auto px-6 py-8 flex flex-col gap-8">
-            <nav class="flex flex-col gap-6">
+    <!-- Mobile Menu Overlay (Mega Menu Style) -->
+    <div id="mobile-menu-overlay" class="fixed top-16 left-0 right-0 z-[60] bg-white hidden flex-col shadow-2xl border-b border-cb-hairline animate-in slide-in-from-top duration-300 max-h-[calc(100vh-64px)] overflow-y-auto">
+        <div class="px-6 py-6 flex flex-col gap-6">
+            <!-- Regular Links -->
+            <nav class="flex flex-col gap-1">
                 @foreach($navLinks as $link)
                     @php
+                        $label = data_get($link, 'label', 'Menu');
                         $href = data_get($link, 'href', '#');
                         if (str_starts_with($href, '#')) {
                             $href = '/' . $href;
                         }
+                        $isMega = in_array($label, ['Produk', 'Katalog', 'Product', 'Catalog']);
                     @endphp
-                    <a href="{{ $href }}" class="text-xl font-normal text-cb-ink mobile-menu-link">
-                        {{ data_get($link, 'label', 'Menu') }}
-                    </a>
+                    @if($isMega)
+                        <details class="group">
+                            <summary class="list-none cursor-pointer flex items-center justify-between py-3 text-lg font-normal text-cb-ink">
+                                <span>{{ $label }}</span>
+                                <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+                            <div class="pl-4 pb-3 flex flex-col gap-1 border-l-2 border-cb-hairline ml-2">
+                                <span class="text-xs font-semibold text-cb-muted uppercase tracking-wider py-2">Kategori</span>
+                                <a href="/katalog/lanyard" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Lanyard Custom</a>
+                                <a href="/katalog/wristband" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Wristband Lanyard</a>
+                                <a href="/katalog/keychain" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Keychain Lanyard</a>
+                                <a href="/katalog/id-card" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">ID Card</a>
+                                <a href="/katalog/card-holder" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Card Holder</a>
+                                <a href="/katalog" class="py-2 text-sm font-medium text-cb-blue mobile-menu-link">Lihat Semua Produk →</a>
+                                <span class="text-xs font-semibold text-cb-muted uppercase tracking-wider py-2 mt-2">Unggulan</span>
+                                <a href="/order?product_id=1" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Lanyard Custom — Rp 10.000/pcs</a>
+                                <a href="/order?product_id=2" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">Wristband — Rp 8.000/pcs</a>
+                                <a href="/order?product_id=4" class="py-2 text-sm text-cb-body hover:text-cb-blue mobile-menu-link">ID Card PVC — Rp 15.000/pcs</a>
+                            </div>
+                        </details>
+                    @else
+                        <a href="{{ $href }}" class="py-3 text-lg font-normal text-cb-ink mobile-menu-link">
+                            {{ $label }}
+                            @if($label === 'FAQ')
+                                <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cb-blue/10 text-cb-blue">Baru</span>
+                            @endif
+                        </a>
+                    @endif
                 @endforeach
             </nav>
-            <div class="pt-8 border-t border-cb-hairline">
+            <div class="pt-4 border-t border-cb-hairline">
                 <a href="{{ $ctaHref }}" class="w-full bg-cb-blue text-white py-4 rounded-cb-lg text-center font-normal block shadow-lg shadow-cb-blue/20 mobile-menu-link">
                     {{ data_get($headerCta, 'label', 'Pesan Sekarang') }}
                 </a>
