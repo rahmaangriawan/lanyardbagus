@@ -6,6 +6,8 @@ use App\Models\ChatMessage;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
@@ -52,12 +54,12 @@ class ChatController extends Controller
 
             // Get AI settings
             $apiKey = Setting::get('ai_api_key');
-            $provider = $this->resolveProvider(Setting::get('ai_provider', 'openai'), $apiKey);
+            $provider = $this->resolveProvider(Setting::get('ai_provider', 'ollama'), $apiKey);
             $model = $this->resolveModel($provider, Setting::get('ai_model'));
             $systemPrompt = Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
             $enabled = Setting::get('ai_enabled', 'true');
 
-            if ($enabled === 'false' || ($provider !== 'free' && ! $apiKey)) {
+            if ($enabled === 'false') {
                 return response()->json([
                     'message' => 'Maaf, layanan chat AI sedang tidak tersedia. Silakan hubungi kami via WhatsApp.'
                 ], 503);
@@ -198,8 +200,9 @@ class ChatController extends Controller
     {
         $settings = [
             'enabled' => Setting::get('ai_enabled', 'true') === 'true',
-            'provider' => Setting::get('ai_provider', 'free'),
-            'model' => Setting::get('ai_model', 'free-agent'),
+            'provider' => Setting::get('ai_provider', 'ollama'),
+            'model' => Setting::get('ai_model', config('services.ollama.model', 'llama3.2')),
+                'base_url' => Setting::get('ai_ollama_base_url', config('services.ollama.base_url', 'http://127.0.0.1:11434')),
             'api_key' => '',
             'has_api_key' => (bool) Setting::get('ai_api_key'),
             'system_prompt' => Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt()),
@@ -217,8 +220,9 @@ class ChatController extends Controller
     {
         $validated = $request->validate([
             'enabled' => ['required', 'boolean'],
-            'provider' => ['required', 'string', 'in:free'],
+            'provider' => ['required', 'string', 'in:ollama'],
             'model' => ['required', 'string'],
+            'base_url' => ['nullable', 'string', 'max:255'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['required', 'string', 'max:5000'],
             'welcome_message' => ['required', 'string', 'max:500'],
@@ -226,8 +230,9 @@ class ChatController extends Controller
         ]);
 
         Setting::set('ai_enabled', $validated['enabled'] ? 'true' : 'false', 'ai');
-        Setting::set('ai_provider', $validated['provider'] === 'free' ? 'free' : $validated['provider'], 'ai');
-        Setting::set('ai_model', $validated['provider'] === 'free' ? 'free-agent' : $validated['model'], 'ai');
+        Setting::set('ai_provider', 'ollama', 'ai');
+        Setting::set('ai_model', $validated['model'], 'ai');
+        Setting::set('ai_ollama_base_url', trim((string) ($validated['base_url'] ?? '')), 'ai');
         if ($validated['api_key'] && $validated['api_key'] !== '***') {
             Setting::set('ai_api_key', $validated['api_key'], 'ai');
         }
@@ -244,35 +249,28 @@ class ChatController extends Controller
     public function testProvider(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'provider' => ['nullable', 'string', 'in:free'],
+            'provider' => ['nullable', 'string', 'in:ollama'],
             'model' => ['nullable', 'string'],
+            'base_url' => ['nullable', 'string', 'max:255'],
             'api_key' => ['nullable', 'string'],
             'system_prompt' => ['nullable', 'string', 'max:5000'],
             'message' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $apiKey = trim((string) ($validated['api_key'] ?? Setting::get('ai_api_key')));
-        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'free');
+        $storedProvider = $validated['provider'] ?? Setting::get('ai_provider', 'ollama');
         $provider = $this->resolveProvider($storedProvider, $apiKey);
         $model = $this->resolveModel($provider, $validated['model'] ?? Setting::get('ai_model'));
+        $baseUrl = trim((string) ($validated['base_url'] ?? Setting::get('ai_ollama_base_url', config('services.ollama.base_url', 'http://127.0.0.1:11434'))));
         $systemPrompt = $validated['system_prompt'] ?? Setting::get('ai_system_prompt', $this->getDefaultSystemPrompt());
         $testMessage = $validated['message'] ?? 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.';
-
-        if ($provider !== 'free' && ! $apiKey) {
-            return response()->json([
-                'success' => false,
-                'provider' => $provider,
-                'model' => $model,
-                'error' => 'API key belum disimpan di settings.',
-            ], 422);
-        }
 
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
             ['role' => 'user', 'content' => $testMessage],
         ];
 
-        $response = $this->callAI($provider, $apiKey, $model, $messages);
+        $response = $this->callAI($provider, $apiKey, $model, $messages, $baseUrl);
 
         if (! $response['success']) {
             return response()->json([
@@ -294,25 +292,93 @@ class ChatController extends Controller
     /**
      * Call AI provider API
      */
-    private function callAI(string $provider, string $apiKey, string $model, array $messages): array
+    private function callAI(string $provider, string $apiKey, string $model, array $messages, ?string $baseUrl = null): array
     {
         try {
             switch ($provider) {
-                case 'free':
-                    return $this->callFreeAgent($messages);
-                case 'anthropic':
-                    return $this->callAnthropic($apiKey, $model, $messages);
-                case 'google':
-                    return $this->callGoogle($apiKey, $model, $messages);
-                case 'openai':
+                case 'ollama':
                 default:
-                    return $this->callOpenAI($apiKey, $model, $messages);
+                    return $this->callOllama($model, $messages, $baseUrl);
             }
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
+    private function callOllama(string $model, array $messages, ?string $baseUrl = null): array
+    {
+        $baseUrl = rtrim((string) ($baseUrl ?: config('services.ollama.base_url', env('OLLAMA_BASE_URL', 'http://127.0.0.1:11434'))), '/');
+        $model = $model !== '' ? $model : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2'));
+
+        try {
+            $response = Http::connectTimeout(5)
+                ->timeout(90)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($baseUrl . '/api/chat', [
+                    'model' => $model,
+                    'messages' => $this->convertMessagesToOllamaMessages($messages),
+                    'stream' => false,
+                    'options' => [
+                        'temperature' => 0.7,
+                    ],
+                ]);
+        } catch (ConnectionException $e) {
+            return [
+                'success' => false,
+                'error' => 'Tidak bisa terhubung ke Ollama di ' . $baseUrl . '. Pastikan service menyala dan Laravel bisa mengakses host itu. Detail: ' . $e->getMessage(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal memanggil Ollama: ' . $e->getMessage(),
+            ];
+        }
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $text = data_get($data, 'message.content')
+                ?? data_get($data, 'response');
+
+            if (filled($text)) {
+                return [
+                    'success' => true,
+                    'content' => $text,
+                    'tokens' => null,
+                    'model' => $model,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => 'Ollama response missing text payload for model ' . $model,
+            ];
+        }
+
+        return [
+            'success' => false,
+                'error' => $this->formatOllamaError($response->status(), $response->body(), $baseUrl, $model),
+        ];
+    }
+
+
+    private function formatOllamaError(int $status, string $body, string $baseUrl, string $model): string
+    {
+        if ($status === 404) {
+            return 'Endpoint Ollama tidak ditemukan di ' . $baseUrl . '. Pastikan Ollama aktif dan URL-nya benar.';
+        }
+
+        if ($status === 400 && str_contains($body, 'model')) {
+            return 'Model ' . $model . ' belum tersedia di Ollama. Jalankan `ollama pull ' . $model . '` lalu coba lagi.';
+        }
+
+        if ($status === 500) {
+            return 'Ollama mengembalikan error 500 untuk model ' . $model . '. Cek status server dan log Ollama.';
+        }
+
+        return 'Ollama request failed: ' . $status . ' ' . $body;
+    }
     private function callOpenAI(string $apiKey, string $model, array $messages): array
     {
         $response = Http::withHeaders([
@@ -489,7 +555,7 @@ class ChatController extends Controller
 
     private function resolveProvider(string $storedProvider, ?string $apiKey): string
     {
-        return 'free';
+        return 'ollama';
     }
 
     private function resolveModel(string $provider, ?string $storedModel): string
@@ -497,117 +563,34 @@ class ChatController extends Controller
         $storedModel = trim((string) $storedModel);
 
         return match ($provider) {
-            'free' => 'free-agent',
-            'google' => str_starts_with($storedModel, 'gemini-2.0-flash') ? 'gemini-2.0-flash' : 'gemini-2.0-flash',
-            'anthropic' => str_starts_with($storedModel, 'claude-') ? $storedModel : 'claude-3-5-sonnet-latest',
-            default => $storedModel !== '' ? $storedModel : 'gpt-4o-mini',
+            'ollama' => $storedModel !== '' ? $storedModel : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2')),
+            default => $storedModel !== '' ? $storedModel : (string) config('services.ollama.model', env('OLLAMA_MODEL', 'llama3.2')),
         };
     }
 
-    private function normalizeGoogleModel(?string $model): ?string
+    private function convertMessagesToOllamaMessages(array $messages): array
     {
-        $model = trim((string) $model);
+        $ollamaMessages = [];
 
-        if ($model === '') {
-            return null;
+        foreach ($messages as $message) {
+            $role = $message['role'] ?? 'user';
+
+            if (! in_array($role, ['system', 'user', 'assistant'], true)) {
+                continue;
+            }
+
+            $ollamaMessages[] = [
+                'role' => $role,
+                'content' => (string) ($message['content'] ?? ''),
+            ];
         }
 
-        if ($model === 'google' || str_starts_with($model, 'gemini-')) {
-            return 'gemini-2.0-flash';
-        }
-
-        return 'gemini-2.0-flash';
+        return $ollamaMessages;
     }
 
     private function fallbackReply(string $message): string
     {
-        $lowerMessage = mb_strtolower($message);
-
-        if (str_contains($lowerMessage, 'harga') || str_contains($lowerMessage, 'biaya')) {
-            return 'Untuk estimasi harga lanyard custom, silakan kirim jumlah pcs, ukuran, dan model yang diinginkan. Tim kami akan bantu hitungkan opsi terbaik.';
-        }
-
-        if (str_contains($lowerMessage, 'waktu') || str_contains($lowerMessage, 'lama')) {
-            return 'Waktu produksi umumnya 3-7 hari kerja tergantung jumlah dan jenis produk. Kalau mendesak, kami bisa cek opsi prioritas.';
-        }
-
-        if (str_contains($lowerMessage, 'desain') || str_contains($lowerMessage, 'logo')) {
-            return 'Bisa, kami bantu cek desain dan rekomendasi material yang paling cocok. Kirim detail kebutuhan Anda supaya kami arahkan lebih tepat.';
-        }
-
-        return 'Siap, ceritakan kebutuhan lanyard Anda: jumlah pcs, ukuran, dan model yang diinginkan. Saya bantu arahkan ke opsi yang paling cocok.';
-    }
-
-    private function callFreeAgent(array $messages): array
-    {
-        $systemPrompt = $this->extractSystemPrompt($messages);
-        $userMessage = '';
-
-        foreach (array_reverse($messages) as $message) {
-            if (($message['role'] ?? null) === 'user') {
-                $userMessage = (string) ($message['content'] ?? '');
-                break;
-            }
-        }
-
-        $reply = $this->generateFreeReply($userMessage, $systemPrompt, $messages);
-
-        return [
-            'success' => true,
-            'content' => $reply,
-            'tokens' => null,
-            'model' => 'free-agent',
-        ];
-    }
-
-    private function generateFreeReply(string $message, string $systemPrompt, array $messages): string
-    {
-        $lowerMessage = mb_strtolower($message);
-        $contextSummary = $this->buildContextSummary($messages);
-
-        if (str_contains($lowerMessage, 'harga') || str_contains($lowerMessage, 'biaya') || str_contains($lowerMessage, 'price')) {
-            return 'Untuk harga lanyard custom, saya perlu jumlah pcs, ukuran, bahan, dan model. Dari situ saya bisa bantu arahkan estimasi yang paling masuk akal.';
-        }
-
-        if (str_contains($lowerMessage, 'logo') || str_contains($lowerMessage, 'desain')) {
-            return 'Bisa, kirim logo atau desain yang Anda punya. Saya bantu cek agar hasilnya cocok untuk lanyard dan tetap rapi saat dicetak.';
-        }
-
-        if (str_contains($lowerMessage, 'lama') || str_contains($lowerMessage, 'waktu') || str_contains($lowerMessage, 'produksi')) {
-            return 'Waktu produksi biasanya bergantung pada jumlah dan kompleksitas desain. Kirim detail kebutuhan supaya saya bantu estimasi yang lebih tepat.';
-        }
-
-        if (str_contains($lowerMessage, 'minimal') || str_contains($lowerMessage, 'pcs') || str_contains($lowerMessage, 'order')) {
-            return 'Minimal order tergantung model lanyard yang dipilih. Kirim kebutuhan Anda, nanti saya bantu arahkan ke opsi yang paling sesuai.';
-        }
-
-        if (str_contains($lowerMessage, 'whatsapp') || str_contains($lowerMessage, 'wa')) {
-            return 'Silakan lanjut ke WhatsApp untuk proses order dan cek detail final. Tim kami akan bantu dari pemilihan bahan sampai konfirmasi desain.';
-        }
-
-        if (str_contains($lowerMessage, 'bahan') || str_contains($lowerMessage, 'polyester') || str_contains($lowerMessage, 'nylon') || str_contains($lowerMessage, 'satin')) {
-            return 'Kami bisa bantu pilih bahan yang paling cocok, misalnya polyester, nylon, atau satin. Setiap bahan punya karakter berbeda untuk tampilan, feel, dan ketahanan.';
-        }
-
-        $summary = $contextSummary !== '' ? ' Konteks terakhir: ' . $contextSummary : '';
-
-        return 'Siap, saya bantu. Tolong kirim jumlah pcs, ukuran, bahan, dan model yang diinginkan supaya saya bisa arahkan opsi terbaik.' . $summary;
-    }
-
-    private function buildContextSummary(array $messages): string
-    {
-        $recent = array_slice($messages, -4);
-        $parts = [];
-
-        foreach ($recent as $message) {
-            $role = ($message['role'] ?? 'user') === 'assistant' ? 'AI' : 'User';
-            $content = trim((string) ($message['content'] ?? ''));
-            if ($content !== '') {
-                $parts[] = $role . ': ' . mb_substr($content, 0, 40);
-            }
-        }
-
-        return implode(' | ', $parts);
+        return 'Maaf, saya belum bisa menjawab saat ini. Silakan coba lagi sebentar atau lanjutkan via WhatsApp.';
     }
 
     private function getDefaultSystemPrompt(): string

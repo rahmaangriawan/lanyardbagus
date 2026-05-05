@@ -25,15 +25,14 @@ const testResult = ref('')
 // AI Settings
 const aiSettings = ref({
   enabled: true,
-  provider: 'free',
-  model: 'free-agent',
+  provider: 'ollama',
+  model: 'llama3.2',
+  base_url: 'http://127.0.0.1:11434',
   api_key: '',
   system_prompt: '',
   welcome_message: '',
   widget_title: 'Asisten Lanyard Bagus'
 })
-
-const apiKeySaved = ref(false)
 
 // Chat Sessions
 const sessions = ref([])
@@ -45,8 +44,12 @@ const trainingData = ref([])
 
 // Provider models
 const providerModels = {
-  free: [
-    { value: 'free-agent', label: 'Free Local Agent' },
+  ollama: [
+    { value: 'llama3.2', label: 'llama3.2' },
+    { value: 'llama3.1', label: 'llama3.1' },
+    { value: 'qwen2.5', label: 'qwen2.5' },
+    { value: 'mistral', label: 'mistral' },
+    { value: 'gemma3', label: 'gemma3' },
   ]
 }
 
@@ -70,14 +73,17 @@ async function loadAISettings() {
   try {
     const res = await axios.get(`${API_URL}/api/admin/chat/settings`, { withCredentials: true })
     aiSettings.value = { ...aiSettings.value, ...res.data }
-    apiKeySaved.value = !!res.data.has_api_key
     aiSettings.value.api_key = ''
-    aiSettings.value.provider = 'free'
-    aiSettings.value.model = 'free-agent'
+    aiSettings.value.provider = 'ollama'
+    aiSettings.value.model = aiSettings.value.model || 'llama3.2'
+    aiSettings.value.base_url = aiSettings.value.base_url || 'http://127.0.0.1:11434'
     if (!aiSettings.value.system_prompt) aiSettings.value.system_prompt = defaultPrompt
     if (!aiSettings.value.welcome_message) aiSettings.value.welcome_message = defaultWelcome
   } catch (err) {
     console.error('Failed to load AI settings:', err)
+    aiSettings.value.provider = 'ollama'
+    aiSettings.value.model = 'llama3.2'
+    aiSettings.value.base_url = 'http://127.0.0.1:11434'
     aiSettings.value.system_prompt = defaultPrompt
     aiSettings.value.welcome_message = defaultWelcome
   }
@@ -114,12 +120,12 @@ async function loadTrainingData() {
 async function saveSettings() {
   loading.value = true
   try {
-    aiSettings.value.provider = 'free'
-    aiSettings.value.model = 'free-agent'
+    aiSettings.value.provider = 'ollama'
+    aiSettings.value.model = aiSettings.value.model || 'llama3.2'
+    aiSettings.value.base_url = aiSettings.value.base_url || 'http://127.0.0.1:11434'
     aiSettings.value.api_key = ''
 
     await axios.put(`${API_URL}/api/admin/chat/settings`, aiSettings.value, { withCredentials: true })
-    apiKeySaved.value = false
     saved.value = true
     setTimeout(() => saved.value = false, 3000)
   } catch (err) {
@@ -135,8 +141,9 @@ async function testProvider() {
 
   try {
     const payload = {
-      provider: 'free',
-      model: 'free-agent',
+      provider: 'ollama',
+      model: aiSettings.value.model || 'llama3.2',
+      base_url: aiSettings.value.base_url || 'http://127.0.0.1:11434',
       api_key: undefined,
       system_prompt: aiSettings.value.system_prompt,
       message: 'Balas singkat: tulis satu kalimat tentang layanan lanyard custom yang kamu pahami.'
@@ -257,12 +264,9 @@ onMounted(() => {
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label>AI Provider</Label>
-              <select
-                v-model="aiSettings.provider"
-                class="w-full h-10 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="free">Free Local Agent</option>
-              </select>
+              <div class="h-10 px-3 py-2 border border-input rounded-md bg-muted text-sm flex items-center text-muted-foreground">
+                Ollama Local
+              </div>
             </div>
 
             <div class="space-y-2">
@@ -279,20 +283,24 @@ onMounted(() => {
                   {{ model.label }}
                 </option>
               </select>
+              <p class="text-xs text-muted-foreground">Pastikan model ini sudah terpasang di Ollama server.</p>
             </div>
           </div>
 
-          <!-- API Key -->
           <div class="space-y-2">
-            <Label>API Key</Label>
+            <Label>Ollama Base URL</Label>
             <Input
-              v-model="aiSettings.api_key"
-              type="password"
-              placeholder="Masukkan API key baru jika ingin mengganti"
+              v-model="aiSettings.base_url"
+              placeholder="http://127.0.0.1:11434"
             />
-            <div class="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>API Key dari provider yang dipilih. Biarkan kosong jika tidak ingin mengubah.</span>
-              <Badge v-if="apiKeySaved" variant="outline" class="text-[10px] uppercase tracking-wide">Tersimpan</Badge>
+            <p class="text-xs text-muted-foreground">Gunakan URL server Ollama yang bisa dijangkau Laravel.</p>
+          </div>
+
+          <!-- Ollama Base Info -->
+          <div class="space-y-2">
+            <Label>Catatan</Label>
+            <div class="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+              Ollama tidak membutuhkan API key. Sambungan backend memakai <span class="font-medium text-foreground">OLLAMA_BASE_URL</span> dan model yang dipilih di bawah.
             </div>
           </div>
 
