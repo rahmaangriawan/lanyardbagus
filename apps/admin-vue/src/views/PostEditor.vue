@@ -19,11 +19,11 @@ const post = ref({
   slug: '',
   content: '',
   excerpt: '',
-  status: 'draft',
+  status: 'DRAFT',
   category_id: null,
   featured_image: null,
   published_at: null,
-  meta_title: '',
+  seo_title: '',
   meta_description: '',
   tags_input: ''
 })
@@ -57,6 +57,7 @@ const copySuccess = ref(false)
 
 const isDirty = ref(false)
 const saveStatus = ref(null)
+const seoTitleTouched = ref(false)
 
 const filteredCategories = computed(() => {
   if (!categorySearch.value) return categories.value
@@ -84,6 +85,12 @@ watch(post, (newVal, oldVal) => {
     isDirty.value = true
   }
 }, { deep: true })
+
+watch(() => post.value.title, (title) => {
+  if (!seoTitleTouched.value) {
+    post.value.seo_title = title || ''
+  }
+})
 
 // Browser tab close/refresh guard
 function handleBeforeUnload(e) {
@@ -217,11 +224,13 @@ async function loadPost() {
     const res = await axios.get(`${API_URL}/api/admin/posts/${postId.value}`, { withCredentials: true })
     post.value = {
       ...res.data,
+      seo_title: res.data.seo_title || res.data.meta_title || '',
       // Convert featuredImage to featured_image for frontend
       featured_image: res.data.featured_image || res.data.featuredImage || null,
       published_at: formatDateTimeLocal(res.data.published_at)
     }
     post.value.tags_input = (res.data?.tags || []).map(tag => tag.name).join(', ')
+    seoTitleTouched.value = Boolean(post.value.seo_title && post.value.seo_title !== post.value.title)
   } catch (err) {
     console.error('Failed to load post:', err)
     alert('Gagal memuat post')
@@ -288,6 +297,7 @@ async function savePost() {
     }
     delete payload.tags_input
     delete payload.featured_image
+    delete payload.meta_title
 
     let newPostId = postId.value
     if (isEdit.value) {
@@ -555,8 +565,13 @@ function viewPost() {
           <div class="space-y-3">
             <div class="space-y-1">
               <Label class="text-xs">SEO Title</Label>
-              <Input v-model="post.meta_title" class="h-8 text-xs" placeholder="Meta title" />
-              <p class="text-xs text-muted-foreground">{{ post.meta_title?.length || 0 }}/70</p>
+              <Input
+                v-model="post.seo_title"
+                class="h-8 text-xs"
+                placeholder="Meta title"
+                @input="seoTitleTouched = true"
+              />
+              <p class="text-xs text-muted-foreground">{{ post.seo_title?.length || 0 }}/70</p>
             </div>
             <div class="space-y-1">
               <Label class="text-xs">Meta Description</Label>
