@@ -1051,7 +1051,7 @@
                     <span class="inline-flex px-4 py-1.5 rounded-cb-pill bg-cb-surface-strong text-cb-blue text-xs font-semibold tracking-wider uppercase mb-4">Artikel Terbaru</span>
                     <h2 class="display-lg text-cb-ink">Wawasan & Tips</h2>
                 </div>
-                <a href="#" class="hidden md:inline-flex items-center gap-2 text-cb-blue font-semibold hover:text-cb-blue-active transition">
+                <a href="/blog" class="hidden md:inline-flex items-center gap-2 text-cb-blue font-semibold hover:text-cb-blue-active transition">
                     Lihat Semua <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </a>
             </div>
