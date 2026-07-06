@@ -21,9 +21,7 @@ class ProductController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-
-        return view('katalog', compact('products', 'settings'));
+        return view('katalog', compact('products'));
     }
 
     /**
@@ -37,9 +35,7 @@ class ProductController extends Controller
 
         $products = $category->activeProducts()->get();
 
-        $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-
-        return view('katalog-category', compact('category', 'products', 'settings'));
+        return view('katalog-category', compact('category', 'products'));
     }
 
     /**

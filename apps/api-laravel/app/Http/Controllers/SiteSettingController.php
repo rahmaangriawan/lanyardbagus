@@ -49,8 +49,7 @@ class SiteSettingController extends Controller
         $settings->save();
         $settings->load(['homepageOgImage:id,url,file_name', 'logoImage:id,url,file_name', 'faviconImage:id,url,file_name']);
 
-        // Clear caches so verification meta tags appear immediately
-        \Illuminate\Support\Facades\Cache::flush();
+        SiteSetting::clearCachedPayloads();
 
         return response()->json($this->serialize($settings));
     }

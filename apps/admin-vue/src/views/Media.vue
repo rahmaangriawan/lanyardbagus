@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { Card, Button, Input } from '../components/ui'
 import { Plus, Image, Search, Trash2, Loader2, Copy, X } from 'lucide-vue-next'
 import axios from 'axios'
@@ -14,6 +14,10 @@ const dragOver = ref(false)
 const selectedMedia = ref(null)
 const copySuccess = ref(false)
 const fileInput = ref(null)
+const mediaPage = ref(1)
+const mediaHasMore = ref(false)
+const loadingMore = ref(false)
+let searchTimer = null
 
 const filteredMedia = computed(() => {
   if (!searchQuery.value) return media.value
@@ -33,18 +37,41 @@ onUnmounted(() => {
   window.removeEventListener('dragover', handleDragOver)
   window.removeEventListener('dragleave', handleDragLeave)
   window.removeEventListener('drop', handleDrop)
+  if (searchTimer) clearTimeout(searchTimer)
 })
 
-async function loadMedia() {
-  loading.value = true
+watch(searchQuery, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => loadMedia(), 300)
+})
+
+async function loadMedia({ append = false } = {}) {
+  if (append) {
+    loadingMore.value = true
+  } else {
+    loading.value = true
+    mediaPage.value = 1
+  }
+
   try {
-    const res = await axios.get(`${API_URL}/api/media`)
-    media.value = res.data || []
+    const res = await axios.get(`${API_URL}/api/media`, {
+      params: { per_page: 24, page: mediaPage.value, q: searchQuery.value || undefined }
+    })
+    const items = res.data?.data || res.data || []
+    media.value = append ? [...media.value, ...items] : items
+    mediaHasMore.value = Boolean(res.data?.meta && res.data.meta.current_page < res.data.meta.last_page)
   } catch (err) {
     console.error('Failed to load media:', err)
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+async function loadMoreMedia() {
+  if (!mediaHasMore.value || loadingMore.value) return
+  mediaPage.value += 1
+  await loadMedia({ append: true })
 }
 
 function handleDragOver(e) {
@@ -217,6 +244,11 @@ function formatSize(bytes) {
             {{ formatSize(item.size) }}
           </div>
         </div>
+      </div>
+      <div v-if="mediaHasMore" class="pt-4 text-center">
+        <Button variant="outline" size="sm" :disabled="loadingMore" @click="loadMoreMedia">
+          {{ loadingMore ? 'Memuat...' : 'Muat Lagi' }}
+        </Button>
       </div>
     </Card>
 

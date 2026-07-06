@@ -25,12 +25,29 @@ class PostController extends Controller
             return response()->json($posts);
         }
 
-        // Admin always gets fresh data
+        // Admin gets paginated data to avoid loading the whole post table at once.
+        $perPage = min(max((int) $request->integer('per_page', 20), 1), 100);
         $query = Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id')
             ->with(['category:id,name', 'featuredImage:id,url'])
             ->latest();
 
-        return response()->json($query->get());
+        $posts = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $posts->items(),
+            'links' => [
+                'first' => $posts->url(1),
+                'last' => $posts->url($posts->lastPage()),
+                'prev' => $posts->previousPageUrl(),
+                'next' => $posts->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse

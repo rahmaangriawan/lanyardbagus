@@ -10,9 +10,36 @@ use Illuminate\Support\Str;
 
 class MediaController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Media::latest()->get());
+        $perPage = min(max((int) $request->integer('per_page', 24), 1), 100);
+
+        $query = Media::latest();
+
+        if ($search = trim((string) $request->input('q', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('file_name', 'like', "%{$search}%")
+                    ->orWhere('alt_text', 'like', "%{$search}%");
+            });
+        }
+
+        $media = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $media->items(),
+            'links' => [
+                'first' => $media->url(1),
+                'last' => $media->url($media->lastPage()),
+                'prev' => $media->previousPageUrl(),
+                'next' => $media->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $media->currentPage(),
+                'last_page' => $media->lastPage(),
+                'per_page' => $media->perPage(),
+                'total' => $media->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse

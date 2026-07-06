@@ -3,9 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Banner extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget('homepage_active_banners'));
+        static::deleted(fn () => Cache::forget('homepage_active_banners'));
+    }
+
     protected $fillable = [
         'title',
         'description',

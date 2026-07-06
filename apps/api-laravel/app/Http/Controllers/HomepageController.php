@@ -44,7 +44,7 @@ class HomepageController extends Controller
         $settings->save();
 
         \Illuminate\Support\Facades\Cache::forget('homepage_data');
-        \Illuminate\Support\Facades\Cache::forget('site_settings');
+        \Illuminate\Support\Facades\Cache::forget('site_settings_global');
 
         return response()->json($this->serialize($settings));
     }

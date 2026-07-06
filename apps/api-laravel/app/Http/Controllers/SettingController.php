@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SettingController extends Controller
 {
@@ -31,6 +32,10 @@ class SettingController extends Controller
             foreach ($validated['settings'] as $setting) {
                 Setting::set($setting['key'], $setting['value'], $setting['group']);
             }
+
+            Cache::forget('setting_google_search_console');
+            Cache::forget('setting_bing_webmaster');
+            Cache::forget('site_settings_global');
 
             return response()->json(['message' => 'Settings updated successfully']);
         } catch (\Exception $e) {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { Card, Button, Input } from '../components/ui'
 import { Plus, Flag, Pencil, Trash2, Loader2, X, Image, Save, Search, Upload } from 'lucide-vue-next'
 import axios from 'axios'
@@ -21,10 +21,20 @@ const mediaSearch = ref('')
 const pickerDragOver = ref(false)
 const pickerUploading = ref(false)
 const pickerFileInput = ref(null)
+const mediaPage = ref(1)
+const mediaHasMore = ref(false)
+const mediaLoadingMore = ref(false)
+let mediaSearchTimer = null
 
 const filteredMedia = computed(() => {
   if (!mediaSearch.value) return mediaList.value
   return mediaList.value.filter(m => m.file_name?.toLowerCase().includes(mediaSearch.value.toLowerCase()))
+})
+
+watch(mediaSearch, () => {
+  if (!showPicker.value) return
+  if (mediaSearchTimer) clearTimeout(mediaSearchTimer)
+  mediaSearchTimer = setTimeout(() => loadPickerMedia(), 300)
 })
 
 const form = ref({
@@ -72,18 +82,40 @@ async function loadBanners() {
 async function openMediaPicker(target) {
   pickerTarget.value = target
   showPicker.value = true
+  const hadSearch = Boolean(mediaSearch.value)
   mediaSearch.value = ''
-  if (mediaList.value.length === 0) {
-    mediaLoading.value = true
-    try {
-      const res = await axios.get(`${API_URL}/api/media`)
-      mediaList.value = res.data || []
-    } catch (err) {
-      console.error('Failed to load media:', err)
-    } finally {
-      mediaLoading.value = false
-    }
+  if (mediaList.value.length === 0 || hadSearch) {
+    await loadPickerMedia()
   }
+}
+
+async function loadPickerMedia({ append = false } = {}) {
+  if (append) {
+    mediaLoadingMore.value = true
+  } else {
+    mediaLoading.value = true
+    mediaPage.value = 1
+  }
+
+  try {
+    const res = await axios.get(`${API_URL}/api/media`, {
+      params: { per_page: 24, page: mediaPage.value, q: mediaSearch.value || undefined }
+    })
+    const items = res.data?.data || res.data || []
+    mediaList.value = append ? [...mediaList.value, ...items] : items
+    mediaHasMore.value = Boolean(res.data?.meta && res.data.meta.current_page < res.data.meta.last_page)
+  } catch (err) {
+    console.error('Failed to load media:', err)
+  } finally {
+    mediaLoading.value = false
+    mediaLoadingMore.value = false
+  }
+}
+
+async function loadMorePickerMedia() {
+  if (!mediaHasMore.value || mediaLoadingMore.value) return
+  mediaPage.value += 1
+  await loadPickerMedia({ append: true })
 }
 
 function selectMediaItem(item) {
@@ -112,8 +144,7 @@ async function uploadToMediaLibrary(files) {
       fd.append('file', file)
       await axios.post(`${API_URL}/api/admin/media`, fd, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } })
     }
-    const res = await axios.get(`${API_URL}/api/media`)
-    mediaList.value = res.data || []
+    await loadPickerMedia()
   } catch (err) {
     alert('Upload gagal: ' + (err.response?.data?.message || err.message))
   } finally {
@@ -356,7 +387,12 @@ onMounted(loadBanners)
             </div>
           </div>
         </div>
-        <div class="px-4 py-2.5 border-t text-xs text-muted-foreground">Drag & drop gambar ke area ini atau klik Upload</div>
+        <div class="px-4 py-2.5 border-t text-xs text-muted-foreground flex items-center justify-between gap-3">
+          <span>Drag & drop gambar ke area ini atau klik Upload</span>
+          <Button v-if="mediaHasMore" variant="outline" size="sm" :disabled="mediaLoadingMore" @click="loadMorePickerMedia">
+            {{ mediaLoadingMore ? 'Memuat...' : 'Muat Lagi' }}
+          </Button>
+        </div>
       </div>
     </div>
   </div>

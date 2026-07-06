@@ -41,16 +41,19 @@ const quickActions = [
 onMounted(async () => {
   try {
     const [postsRes, pagesRes, mediaRes] = await Promise.all([
-      axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true }).catch(() => ({ data: [] })),
+      axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true, params: { per_page: 3 } }).catch(() => ({ data: [] })),
       axios.get(`${API_URL}/api/pages`, { withCredentials: true }).catch(() => ({ data: [] })),
-      axios.get(`${API_URL}/api/media`, { withCredentials: true }).catch(() => ({ data: [] })),
+      axios.get(`${API_URL}/api/media`, { withCredentials: true, params: { per_page: 1 } }).catch(() => ({ data: [] })),
     ])
+
+    const postsData = postsRes.data?.data || postsRes.data || []
+    const mediaData = mediaRes.data?.data || mediaRes.data || []
     
-    stats.value.posts = postsRes.data.length || 0
+    stats.value.posts = postsRes.data?.meta?.total ?? postsData.length ?? 0
     stats.value.pages = pagesRes.data.length || 0
-    stats.value.media = mediaRes.data.length || 0
+    stats.value.media = mediaRes.data?.meta?.total ?? mediaData.length ?? 0
     
-    recentPosts.value = (postsRes.data || []).slice(0, 3)
+    recentPosts.value = postsData.slice(0, 3)
   } catch (err) {
     console.error('Failed to load stats:', err)
   } finally {

@@ -4,9 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class SiteSetting extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => self::clearCachedPayloads());
+        static::deleted(fn () => self::clearCachedPayloads());
+    }
+
+    public static function clearCachedPayloads(): void
+    {
+        Cache::forget('site_settings_global');
+        Cache::forget('setting_google_search_console');
+        Cache::forget('setting_bing_webmaster');
+        Cache::forget('homepage_data');
+    }
+
     protected $fillable = [
         'site_title',
         'whatsapp_number',

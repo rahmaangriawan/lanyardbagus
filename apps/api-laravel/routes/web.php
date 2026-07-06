@@ -3,17 +3,28 @@
 use App\Models\SiteSetting;
 use App\Models\Banner;
 use App\Models\Post;
+use Illuminate\Support\Facades\Cache;
 
 Route::get('/', function () {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    $banners = Banner::where('is_active', true)->orderBy('order')->get();
-    $posts = Post::with(['featuredImage', 'category'])->published()->latest('published_at')->take(3)->get();
+    $banners = Cache::remember('homepage_active_banners', 3600, function () {
+        return Banner::where('is_active', true)->orderBy('order')->get();
+    });
+    $posts = Cache::remember('homepage_latest_posts', 3600, function () {
+        return Post::select('id', 'title', 'slug', 'excerpt', 'published_at', 'featured_image_id', 'category_id')
+            ->with(['featuredImage:id,url,file_name', 'category:id,name'])
+            ->published()
+            ->latest('published_at')
+            ->take(3)
+            ->get();
+    });
     
-    return view('home', compact('settings', 'banners', 'posts'));
+    return view('home', compact('banners', 'posts'));
 });
 
 // TEMPORARY: Route to run migrations on shared hosting without SSH
 Route::get('/migrate-db-production', function () {
+    abort_unless(app()->environment('local'), 404);
+
     $output = '<h3>Migration Results:</h3><br>';
     $files = \Illuminate\Support\Facades\File::files(database_path('migrations'));
     
@@ -40,6 +51,8 @@ Route::get('/migrate-db-production', function () {
 
 // TEMPORARY: Create storage symlink (run once on production)
 Route::get('/storage-link-production', function () {
+    abort_unless(app()->environment('local'), 404);
+
     try {
         \Illuminate\Support\Facades\Artisan::call('storage:link');
         return 'Storage link created: ' . \Illuminate\Support\Facades\Artisan::output();
@@ -50,6 +63,8 @@ Route::get('/storage-link-production', function () {
 
 // TEMPORARY: Sync media files from storage into DB (untuk recover media lama)
 Route::get('/sync-media-production', function () {
+    abort_unless(app()->environment('local'), 404);
+
     $disk = \Illuminate\Support\Facades\Storage::disk('public');
     $files = $disk->files('media');
     $count = 0;
@@ -95,6 +110,8 @@ Route::get('/sync-media-production', function () {
 
 // TEMPORARY: Clear all caches
 Route::get('/clear-cache-production', function () {
+    abort_unless(app()->environment('local'), 404);
+
     try {
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
         \Illuminate\Support\Facades\Artisan::call('config:clear');
@@ -108,6 +125,8 @@ Route::get('/clear-cache-production', function () {
 
 // TEMPORARY: Debug site verification
 Route::get('/debug-settings', function () {
+    abort_unless(app()->environment('local'), 404);
+
     $settings = SiteSetting::first();
     $systemGsc = \App\Models\Setting::get('google_search_console');
     $systemBing = \App\Models\Setting::get('bing_webmaster');
@@ -133,6 +152,8 @@ Route::get('/debug-settings', function () {
 
 // TEMPORARY: Test meta tag rendering directly
 Route::get('/debug-meta', function () {
+    abort_unless(app()->environment('local'), 404);
+
     $settings = SiteSetting::first();
     $gsc = $settings->google_site_verification ?? \App\Models\Setting::get('google_search_console') ?? null;
     $bing = $settings->bing_site_verification ?? \App\Models\Setting::get('bing_webmaster') ?? null;
@@ -164,8 +185,9 @@ Route::get('/katalog/{slug}', [App\Http\Controllers\ProductController::class, 'k
 
 // Blog Archive (Semua Artikel)
 Route::get('/blog', function () {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    $query = Post::with(['featuredImage', 'category', 'author'])->published();
+    $query = Post::select('id', 'title', 'slug', 'excerpt', 'content', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id', 'author_id')
+        ->with(['featuredImage:id,url,file_name', 'category:id,name,slug', 'author:id,name,username,avatar_url'])
+        ->published();
     
     $search = request('q');
     if ($search) {
@@ -189,14 +211,18 @@ Route::get('/blog', function () {
             'pagination_html' => view('partials.pagination-numbers', compact('posts'))->render(),
         ]);
     }
-    return view('blog', compact('settings', 'posts', 'archiveTitle', 'archiveDescription', 'search'));
+    return view('blog', compact('posts', 'archiveTitle', 'archiveDescription', 'search'));
 });
 
 // Blog Archive by Category
 Route::get('/blog/category/{slug}', function ($slug) {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
     $category = \App\Models\Category::where('slug', $slug)->firstOrFail();
-    $posts = Post::with(['featuredImage', 'category', 'author'])->where('category_id', $category->id)->published()->latest('published_at')->paginate(6);
+    $posts = Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id', 'author_id')
+        ->with(['featuredImage:id,url,file_name', 'category:id,name,slug', 'author:id,name,username,avatar_url'])
+        ->where('category_id', $category->id)
+        ->published()
+        ->latest('published_at')
+        ->paginate(6);
     $archiveTitle = 'Kategori: ' . $category->name;
     $archiveDescription = $category->description ?? 'Menampilkan artikel dalam kategori ' . $category->name . '.';
     if (request()->ajax() || request('ajax')) {
@@ -205,58 +231,49 @@ Route::get('/blog/category/{slug}', function ($slug) {
             'pagination_html' => view('partials.pagination-numbers', compact('posts'))->render(),
         ]);
     }
-    return view('blog', compact('settings', 'posts', 'archiveTitle', 'archiveDescription', 'category'));
+    return view('blog', compact('posts', 'archiveTitle', 'archiveDescription', 'category'));
 });
 
 // Jenis Lanyard Landing Page
 Route::get('/jenis', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('jenis', compact('settings'));
+    return view('jenis');
 });
 
 // Produk Landing Page
 Route::get('/produk', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('produk', compact('settings'));
+    return view('produk');
 });
 
 // Harga Landing Page
 Route::get('/harga', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('harga', compact('settings'));
+    return view('harga');
 });
 
 // FAQ Landing Page
 Route::get('/faq', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('faq', compact('settings'));
+    return view('faq');
 });
 
 // Promo Page
 Route::get('/promo', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('promo', compact('settings'));
+    return view('promo');
 });
 
 // Static Pages
 Route::get('/kontak', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('kontak', compact('settings'));
+    return view('kontak');
 });
 
 Route::get('/tentang', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('tentang', compact('settings'));
+    return view('tentang');
 });
 
 Route::get('/pengiriman', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('pengiriman', compact('settings'));
+    return view('pengiriman');
 });
 
 Route::get('/kebijakan', function () {
-    $settings = \App\Models\SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    return view('kebijakan', compact('settings'));
+    return view('kebijakan');
 });
 
 // Order / Payment Page
@@ -266,9 +283,13 @@ Route::get('/order', function () {
 
 // Blog Archive by Tag
 Route::get('/blog/tag/{slug}', function ($slug) {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
     $tag = \App\Models\Tag::where('slug', $slug)->firstOrFail();
-    $posts = $tag->posts()->with(['featuredImage', 'category', 'author'])->published()->latest('published_at')->paginate(6);
+    $posts = $tag->posts()
+        ->select('posts.id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'posts.created_at', 'featured_image_id', 'category_id', 'author_id')
+        ->with(['featuredImage:id,url,file_name', 'category:id,name,slug', 'author:id,name,username,avatar_url'])
+        ->published()
+        ->latest('published_at')
+        ->paginate(6);
     $archiveTitle = 'Tag: ' . $tag->name;
     $archiveDescription = 'Menampilkan artikel dengan tag ' . $tag->name . '.';
     if (request()->ajax() || request('ajax')) {
@@ -277,14 +298,13 @@ Route::get('/blog/tag/{slug}', function ($slug) {
             'pagination_html' => view('partials.pagination-numbers', compact('posts'))->render(),
         ]);
     }
-    return view('blog', compact('settings', 'posts', 'archiveTitle', 'archiveDescription', 'tag'));
+    return view('blog', compact('posts', 'archiveTitle', 'archiveDescription', 'tag'));
 });
 
 // ============================================================
 // Authors List (Index)
 // ============================================================
 Route::get('/author', function () {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
     // Fetch users who have a username, with their post count and role
     $authors = \App\Models\User::whereNotNull('username')
         ->with('role')
@@ -294,48 +314,57 @@ Route::get('/author', function () {
         ->orderBy('posts_count', 'desc')
         ->get();
 
-    return view('authors', compact('settings', 'authors'));
+    return view('authors', compact('authors'));
 });
 
 // ============================================================
 // Author Archive (standalone route, NOT under /blog/)
 // ============================================================
 Route::get('/author/{slug}', function ($slug) {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
     // Match by slugified username (spaces → dashes)
-    $author = \App\Models\User::all()
+    $author = \App\Models\User::select('id', 'name', 'username', 'email', 'bio', 'avatar_url', 'created_at')
+        ->whereNotNull('username')
+        ->get()
         ->first(fn ($u) => \Illuminate\Support\Str::slug($u->username ?? '') === $slug);
     abort_if(!$author, 404);
-    $posts = Post::with(['featuredImage', 'category', 'author'])->where('author_id', $author->id)->published()->latest('published_at')->paginate(6);
+    $posts = Post::select('id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'created_at', 'featured_image_id', 'category_id', 'author_id')
+        ->with(['featuredImage:id,url,file_name', 'category:id,name,slug', 'author:id,name,username,avatar_url'])
+        ->where('author_id', $author->id)
+        ->published()
+        ->latest('published_at')
+        ->paginate(6);
     if (request()->ajax() || request('ajax')) {
         return response()->json([
             'posts_html'      => view('partials.posts-grid', compact('posts'))->render(),
             'pagination_html' => view('partials.pagination-numbers', compact('posts'))->render(),
         ]);
     }
-    return view('author', compact('settings', 'posts', 'author'));
+    return view('author', compact('posts', 'author'));
 });
 
 // ============================================================
 // SITEMAP HTML (Human-readable)
 // ============================================================
 Route::get('/sitemap', function () {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
-    $posts = Post::published()->get();
-    $categories = \App\Models\Category::all();
+    $posts = Post::select('title', 'slug', 'updated_at', 'featured_image_id')
+        ->with('featuredImage:id,url')
+        ->published()
+        ->latest('updated_at')
+        ->get();
+    $categories = \App\Models\Category::select('name', 'slug')->orderBy('name')->get();
     $statics = [
         'jenis', 'produk', 'harga', 'faq', 'kontak', 'tentang', 'pengiriman', 'kebijakan', 'blog'
     ];
 
-    return view('sitemap', compact('settings', 'posts', 'categories', 'statics'));
+    return view('sitemap', compact('posts', 'categories', 'statics'));
 });
 
 // ============================================================
 // SITEMAP XML (For search engines)
 // ============================================================
 Route::get('/sitemap.xml', function () {
-    $posts = Post::published()->get();
-    $categories = \App\Models\Category::all();
+    $posts = Post::select('slug', 'updated_at')->published()->latest('updated_at')->get();
+    $categories = \App\Models\Category::select('slug')->orderBy('slug')->get();
     $statics = [
         'jenis', 'produk', 'harga', 'faq', 'kontak', 'tentang', 'pengiriman', 'kebijakan', 'blog'
     ];
@@ -348,10 +377,9 @@ Route::get('/sitemap.xml', function () {
 // Single Post — MUST be LAST to avoid swallowing the routes above
 // ============================================================
 Route::get('/blog/{slug}', function ($slug) {
-    $settings = SiteSetting::with(['logoImage', 'faviconImage'])->first();
     $post = Post::with(['featuredImage', 'author', 'category', 'tags'])->where('slug', $slug)->firstOrFail();
 
-    return view('post', compact('settings', 'post'));
+    return view('post', compact('post'));
 });
 
 // ============================================================

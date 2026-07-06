@@ -16,8 +16,8 @@ const filterStatus = ref('all') // all, published, draft, newest, oldest
 onMounted(async () => {
   try {
     // Pakai endpoint admin agar bisa melihat semua post (termasuk DRAFT)
-    const res = await axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true })
-    posts.value = res.data || []
+    const res = await axios.get(`${API_URL}/api/admin/posts`, { withCredentials: true, params: { per_page: 100 } })
+    posts.value = res.data?.data || res.data || []
   } catch (err) {
     console.error('Failed to load posts:', err)
   } finally {
@@ -223,4 +223,3 @@ async function deletePost(id, event) {
     </Card>
   </div>
 </template>
-
